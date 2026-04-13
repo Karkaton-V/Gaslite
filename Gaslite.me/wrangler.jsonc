@@ -1,0 +1,6 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "gaslite-me",
+    "compatibility_date": "2026-04-13",
+    "compatibility_flags": ["nodejs_compat"]
+  }
