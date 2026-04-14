@@ -1,15 +1,23 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { useEffect } from "react"
 
 export default function App() {
+  useEffect(() => {
+    document.documentElement.classList.add("dark")
+  }, [])
+
   return (
-    <div style={{ padding: "2rem" }}>
-      <Card style={{ width: "300px" }}>
+    <div className="min-h screen bg-background p-8 text-foreground">
+
+      
+      
+      <Card className="w-[300px] bg-card text-card-foreground">
         <CardHeader>
           <CardTitle>Test Card</CardTitle>
         </CardHeader>
-        <CardContent style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <CardContent className="flex flex-col gap-4">
           <Input placeholder="Test field" />
           <Button>Test Button</Button>
         </CardContent>
