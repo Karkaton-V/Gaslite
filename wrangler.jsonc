@@ -1,0 +1,7 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    // Gaslite.me/wrangler.jsonc
+    "name": "gaslite",
+    "compatibility_date": "2026-04-13",
+    "compatibility_flags": ["nodejs_compat"]
+  }
