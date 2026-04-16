@@ -2,6 +2,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useEffect } from "react"
+import { Post } from "./components/ui/post"
 
 export default function App() {
   useEffect(() => {
@@ -9,19 +10,31 @@ export default function App() {
   }, [])
 
   return (
-    <div className="min-h screen bg-background p-8 text-foreground">
-
-      
-      
-      <Card className="w-[300px] bg-card text-card-foreground">
-        <CardHeader>
-          <CardTitle>Test Card</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <Input placeholder="Test field" />
-          <Button>Test Button</Button>
-        </CardContent>
-      </Card>
+    <div className = "min-h screen bg-background p-8 text-foreground">
+     <Post
+        username = "alyx"
+        avatarPicture = "./assets/druski.png"
+        postContent = "This is a test post component"
+        likeCount = {0}
+        commentCount = {0}
+      />
+      <br />
+      <Post
+        username = "user123"
+        avatarPicture = "./assets/default.png"
+        postContent = "Hello world!"
+        likeCount = {0}
+        commentCount = {0}
+      />
+      <br />
+      <Post
+        username = "Karkaton"
+        avatarPicture = "./assets/default.png"
+        postContent = "Another test post"
+        likeCount = {0}
+        commentCount = {0}
+      />
     </div>
+
   )
 }
