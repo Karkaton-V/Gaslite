@@ -6,6 +6,7 @@ import { Toggle } from "@/shared/ui/toggle"
 import { Separator } from "@/shared/ui/separator"
 import { cn } from "@/shared/lib/utils/index"
 import { HeartIcon } from "@phosphor-icons/react"
+// import { Comment } from "@wherever/it/gets/put"
 
 // prop block can be used to define "arguments" for the component
 // prop/type block lets me define var names as well as types
@@ -30,6 +31,7 @@ function Post({
     commentCount,
     avatarPicture,
     className,
+    // commentData,
     ...props
     }: PostProps & React.ComponentProps<"div">) {
 
