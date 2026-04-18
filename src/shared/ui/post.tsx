@@ -1,10 +1,10 @@
-import {useState, useEffect} from "react"
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Toggle } from "@/components/ui/toggle"
-import { Separator } from "@/components/ui/separator"
-import { cn } from "@/lib/utils"
+import { useState } from "react"
+import { Card, CardTitle, CardContent, CardFooter } from "@/shared/ui/card"
+import { Avatar, AvatarImage } from "@/shared/ui/avatar"
+import { Button } from "@/shared/ui/button"
+import { Toggle } from "@/shared/ui/toggle"
+import { Separator } from "@/shared/ui/separator"
+import { cn } from "@/shared/lib/utils/index"
 import { HeartIcon } from "@phosphor-icons/react"
 
 // prop block can be used to define "arguments" for the component
@@ -49,7 +49,7 @@ function Post({
     // className can be used to define properties of the object
     // className "variables" can be found in tailwindCSS docs
     <div className = "w-1/2 mx-auto"> 
-    <Card className={cn("bg-card text-card-foreground", className)} {...props} >
+    <Card className = {cn("bg-card text-muted-foreground", className)} {...props} >
             <CardTitle> 
                 <div className = "flex items-center gap-5">
                 <Avatar size = "lgr" className = "ml-5">
