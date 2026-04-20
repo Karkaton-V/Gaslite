@@ -27,7 +27,7 @@ export default function AppRoutes() {
 
         <Route path="/recommended" element={
           <Protected>
-            <UserPostsPage />   // Emptied out until backend integration is done
+            <UserPostsPage />
           </Protected>
             
         } />
