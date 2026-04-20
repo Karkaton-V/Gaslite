@@ -1,9 +1,9 @@
 
-// import { Post } from "@/shared/ui/post";
+import { Post } from "@/shared/ui/post";
 
 export default function UserPostsPage() {
-/* return (
-  <>
+return (
+/*  <>
     <div className="p-6">
       <h1 className="text-3xl font-semibold">Recommended</h1>
       <p className="mt-2 text-gray-600">Welcome to your recommended user posts.</p>
@@ -21,6 +21,17 @@ export default function UserPostsPage() {
       <br />
     </div>
     }
-  </>
-  ); */
+  </> */
+
+<div className = "min-h-screen bg-muted p-8 text-foreground">
+      <Post
+        username = "Followed User"
+        avatarPicture = "./assets/kingBoo.png"
+        postContent = "Hello! You follow me!"
+        likeCount = {420}
+        commentCount = {69}
+      />
+    </div>
+
+  );
 }
