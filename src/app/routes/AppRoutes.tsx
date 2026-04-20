@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
 import DashboardPage from "@/features/home/pages/DashboardPage";
-import UserPostsPage from "@/features/home/pages/UserPostsPage";
+//import UserPostsPage from "@/features/home/pages/UserPostsPage";
 
 import { useProtectedRoute } from "@/shared/hooks/useProtectedRoute";
 
