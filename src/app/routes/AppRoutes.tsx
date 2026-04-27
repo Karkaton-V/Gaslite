@@ -20,11 +20,7 @@ export default function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        <Route path="/passwordreset" element={
-            <Protected>
-              <PasswordResetPage />
-            </Protected>
-          } />
+        <Route path="/passwordreset" element={<PasswordResetPage />} />
 
         <Route path="/dashboard" element={
             <Protected>
