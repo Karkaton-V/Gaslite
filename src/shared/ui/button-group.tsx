@@ -1,3 +1,4 @@
+import * as React from "React"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
