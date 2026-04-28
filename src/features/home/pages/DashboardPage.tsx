@@ -2,6 +2,7 @@ import { supabase } from "@/shared/lib/supabase/client";
 import { Post } from "@/shared/ui/post";
 import { Button } from "@/shared/ui/button";
 import { useNavigate } from "react-router-dom";
+import  BottomNav  from "@/shared/ui/BottomNav"
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Post section */}
-      <div className="min-h-screen bg-muted p-8 text-foreground">
+      <div className="min-h-screen bg-muted p-8 pb-24 text-foreground">
         <Post
           username="alyx"
           avatarPicture="./assets/druski.png"
@@ -56,6 +57,8 @@ export default function DashboardPage() {
           commentCount={0}
         />
       </div>
+
+      <BottomNav />
     </>
   );
 }

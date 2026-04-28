@@ -5,7 +5,8 @@ import RegisterPage from "@/features/auth/pages/RegisterPage";
 import PasswordResetPage from "@/features/auth/pages/PasswordResetPage";
 import DashboardPage from "@/features/home/pages/DashboardPage";
 import UserPostsPage from "@/features/home/pages/UserPostsPage";
-import Test from "@/features/home/pages/DBTest";
+import CommunitiesPage from "@/features/home/pages/CommunitiesPage";
+import ProfilePage from "@/features/home/pages/ProfilePage";
 
 import { useProtectedRoute } from "@/shared/hooks/useProtectedRoute";
 
@@ -18,26 +19,47 @@ export default function AppRoutes() {
         {/* Redirect root → /login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        <Route path="/test" element={<Test />} />
+        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-
         <Route path="/passwordreset" element={<PasswordResetPage />} />
 
-        <Route path="/dashboard" element={
+        {/* Protected Routes */}
+        <Route
+          path="/dashboard"
+          element={
             <Protected>
               <DashboardPage />
             </Protected>
-          } />
+          }
+        />
 
+        <Route
+          path="/recommended"
+          element={
+            <Protected>
+              <UserPostsPage />
+            </Protected>
+          }
+        />
 
+        <Route
+          path="/communities"
+          element={
+            <Protected>
+              <CommunitiesPage />
+            </Protected>
+          }
+        />
 
-        <Route path="/recommended" element={
-          <Protected>
-            <UserPostsPage />
-          </Protected>
-            
-        } />
+        <Route
+          path="/profile"
+          element={
+            <Protected>
+              <ProfilePage />
+            </Protected>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
