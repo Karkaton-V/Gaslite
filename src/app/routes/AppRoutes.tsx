@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
+import PasswordResetPage from "@/features/auth/pages/PasswordResetPage";
 import DashboardPage from "@/features/home/pages/DashboardPage";
 import UserPostsPage from "@/features/home/pages/UserPostsPage";
 import CommunitiesPage from "@/features/home/pages/CommunitiesPage";
@@ -21,6 +22,7 @@ export default function AppRoutes() {
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/passwordreset" element={<PasswordResetPage />} />
 
         {/* Protected Routes */}
         <Route
