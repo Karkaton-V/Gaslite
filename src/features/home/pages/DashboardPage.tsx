@@ -13,6 +13,11 @@ export default function DashboardPage() {
     navigate("/login");
   }
 
+  // handles settings page navigation
+  async function handleSettings() {
+    navigate("/usersettings");
+  }
+
   return (
     <>
       {/* Header section */}
@@ -25,11 +30,22 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Right side: logout button */}
-        <Button variant="destructive" onClick={handleLogout}>
-          Logout
-        </Button>
+        {/* add div for button positioning */}
+        <div className = "flex items-center gap-2">
+
+          {/* add settings button here for now */}
+          <Button variant="outline" onClick={handleSettings}>
+            Settings
+          </Button>
+
+          {/* Right side: logout button */}
+          <Button variant="destructive" onClick={handleLogout}>
+            Logout
+          </Button>
+        </div>
       </div>
+
+    
 
       {/* Post section */}
       <div className="min-h-screen bg-muted p-8 pb-24 text-foreground">
