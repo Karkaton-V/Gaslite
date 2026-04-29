@@ -33,6 +33,11 @@ export default function DashboardPage() {
         {/* add div for button positioning */}
         <div className = "flex items-center gap-2">
 
+          {/* Messages button here for now*/}
+          <Button variant="outline" onClick={() => navigate("/messages")}>
+            Messages
+          </Button>
+
           {/* add settings button here for now */}
           <Button variant="outline" onClick={handleSettings}>
             Settings
