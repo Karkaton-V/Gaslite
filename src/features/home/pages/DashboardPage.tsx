@@ -2,6 +2,7 @@ import { supabase } from "@/shared/lib/supabase/client";
 import { Post } from "@/shared/ui/post";
 import { Button } from "@/shared/ui/button";
 import { useNavigate } from "react-router-dom";
+import { PostDialog } from "@/shared/ui/post-dialog"
 import  BottomNav  from "@/shared/ui/BottomNav"
 
 export default function DashboardPage() {
@@ -33,6 +34,9 @@ export default function DashboardPage() {
         {/* add div for button positioning */}
         <div className = "flex items-center gap-2">
 
+          {/* add post button here */}
+          <PostDialog />
+          
           {/* Messages button here for now*/}
           <Button variant="outline" onClick={() => navigate("/messages")}>
             Messages
