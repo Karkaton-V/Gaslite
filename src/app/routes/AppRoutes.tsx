@@ -4,6 +4,7 @@ import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
 import DashboardPage from "@/features/home/pages/DashboardPage";
 import UserPostsPage from "@/features/home/pages/UserPostsPage";
+import MessagesPage from "@/features/home/pages/MessagesPage";
 
 import { useProtectedRoute } from "@/shared/hooks/useProtectedRoute";
 
@@ -18,6 +19,12 @@ export default function AppRoutes() {
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+
+        <Route path="/messages" element={
+          <Protected>
+            <MessagesPage />
+          </Protected>
+        } />
 
         <Route path="/dashboard" element={
             <Protected>
