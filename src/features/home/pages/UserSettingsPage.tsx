@@ -53,7 +53,7 @@ export default function UserSettingsPage() {
       </div>
 
       {/* "main" section */}
-      <div className="min-h-screen bg-muted items-center p-8 pb-24 text-foreground space-y-4">
+      <div className="min-h-screen bg-background items-center p-8 pb-24 text-foreground space-y-4">
         <Button variant="outline">Change User Handle</Button>
         <Button variant="outline">Change Display Name</Button>
         <Button variant="outline">Change Avatar</Button>

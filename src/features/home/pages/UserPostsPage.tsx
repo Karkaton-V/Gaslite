@@ -4,7 +4,7 @@ import BottomNav from "@/shared/ui/BottomNav";
 export default function UserPostsPage() {
   return (
     <>
-      <div className="min-h-screen bg-muted p-8 pb-24 text-foreground">
+      <div className="min-h-screen bg-background p-8 pb-24 text-foreground">
         <div className="mb-6">
           <h1 className="text-3xl font-semibold">Recommended</h1>
           <p className="mt-2 text-muted-foreground">

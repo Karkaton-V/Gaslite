@@ -57,7 +57,7 @@ export default function DashboardPage() {
     
 
       {/* Post section */}
-      <div className="min-h-screen bg-muted p-8 pb-24 text-foreground">
+      <div className="min-h-screen bg-background p-8 pb-24 text-foreground">
         <Post
           username="alyx"
           avatarPicture="./assets/druski.png"
