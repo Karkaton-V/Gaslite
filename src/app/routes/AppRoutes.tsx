@@ -37,14 +37,17 @@ export default function AppRoutes() {
           }
         />
 
-        <Route path="/messages" element={
-          <Protected>
-            <MessagesPage />
-          </Protected>
-        } />
+        <Route
+          path="/messages"
+          element={
+            <Protected>
+              <MessagesPage />
+            </Protected>
+          }
+        />
 
-        <Route 
-          path = "/usersettings"
+        <Route
+          path="/usersettings"
           element={
             <Protected>
               <UserSettingsPage />

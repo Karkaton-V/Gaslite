@@ -37,7 +37,7 @@ export default function RegisterPage() {
       email,
       password,
       options: {
-        data: { username },
+        data: { handle: username, display_name: username },
       },
     });
 
@@ -113,7 +113,7 @@ export default function RegisterPage() {
           {/* Submit-level error */}
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full bg-blue-600">
             Register
           </Button>
         </form>
