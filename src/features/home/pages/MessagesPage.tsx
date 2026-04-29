@@ -1,6 +1,8 @@
 import { ButtonGroup, ButtonGroupSeparator } from "@/shared/ui/button-group";
 import { Button } from "@/shared/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar";
+import { useNavigate } from "react-router-dom";
+import  BottomNav  from "@/shared/ui/BottomNav"
 
 type Conversation = {
   id: number,
@@ -53,6 +55,7 @@ const dummyConversations: Conversation[] = [
 
 export default function MessagesPage() {
   return (
+    <>
     <div className="min-h-screen bg-muted p-8 text-foreground">
       <div className="mx-auto w-full max-w-2xl">
         <h1 className="text-3xl font-semibold">Messages</h1>
@@ -108,5 +111,8 @@ export default function MessagesPage() {
         </ul>
       </div>
     </div>
-  );
+    {/* bottom nav bar */}
+    <BottomNav />
+    </>
+  )
 }
