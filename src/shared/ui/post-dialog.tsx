@@ -1,18 +1,13 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/shared/ui/button"
 import { Dialog,
-         DialogClose, 
          DialogContent, 
-         DialogDescription, 
          DialogFooter, 
          DialogHeader,
          DialogTitle,
          DialogTrigger
        } from "@/shared/ui/dialog"
-import { Field, FieldDescription, FieldLabel } from "@/shared/ui/field"
 import { Textarea } from "@/shared/ui/textarea"
-import { cn } from "@/shared/lib/utils/index"
-import { supabase } from "@/shared/lib/supabase/client";
 import { createPost } from "@/features/posts/api/postFunctions";
 
 // using the shadcn dialog page for help
