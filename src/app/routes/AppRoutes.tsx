@@ -4,7 +4,7 @@ import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
 import PasswordResetPage from "@/features/auth/pages/PasswordResetPage";
 import DashboardPage from "@/features/home/pages/DashboardPage";
-import UserPostsPage from "@/features/home/pages/UserPostsPage";
+import FollowingPage from "@/features/home/pages/FollowingPage";
 import CommunitiesPage from "@/features/home/pages/CommunitiesPage";
 import ProfilePage from "@/features/home/pages/ProfilePage";
 import UserSettingsPage from "@/features/home/pages/UserSettingsPage";
@@ -58,7 +58,7 @@ export default function AppRoutes() {
           path="/recommended"
           element={
             <Protected>
-              <UserPostsPage />
+              <FollowingPage />
             </Protected>
           }
         />

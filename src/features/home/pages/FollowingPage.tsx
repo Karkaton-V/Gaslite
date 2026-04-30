@@ -29,7 +29,7 @@ const posts = [
   },
 ];
 
-export default function UserPostsPage() {
+export default function FollowingPage() {
   const [sortBy, setSortBy] = useState("newest");
   const [filterBy, setFilterBy] = useState("all");
 
