@@ -60,7 +60,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-background p-8 pb-24 text-foreground">
         <Post
           username="alyx"
-          avatarPicture="./assets/druski.png"
+          avatarPicture="default/default-avatar.png"
           postContent="This is a test post component"
           likeCount={0}
           commentCount={0}
