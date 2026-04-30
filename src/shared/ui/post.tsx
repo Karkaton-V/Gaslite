@@ -8,6 +8,15 @@ import { cn } from "@/shared/lib/utils/index"
 import { HeartIcon } from "@phosphor-icons/react"
 // import { Comment } from "@wherever/it/gets/put"
 
+
+{/*
+  TODO:
+  1. make posts get properly pulled/displayed from db
+  2. implement proper like functionality
+  3. implement proper comment functionality
+*/}
+
+
 // prop block can be used to define "arguments" for the component
 // prop/type block lets me define var names as well as types
 // props are supposed to be used for data that doesn't change throughout the lifetime of the object/component
@@ -22,7 +31,7 @@ type PostProps = {
 }
 
 
-function Post({ 
+export function Post({ 
     // this block declares the "arguments"
     // the ": PostProps" at the end of the block shows where the definitions for these vars are
     username,
@@ -83,5 +92,3 @@ function Post({
     </div>
   )
 }
-
-export { Post }

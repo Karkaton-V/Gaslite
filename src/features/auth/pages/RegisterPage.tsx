@@ -7,48 +7,68 @@ import { Card } from "@/shared/ui/card";
 import { Label } from "@/shared/ui/label";
 
 export default function RegisterPage() {
-  // React Router navigation hook
   const navigate = useNavigate();
 
-  // Controlled form state for email, password, and error messages
+  // Controlled form state
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
-  // Handles Supabase sign-up flow
+  // Derived state: do passwords match?
+  const passwordsMatch =
+    password.length > 0 &&
+    confirmPassword.length > 0 &&
+    password === confirmPassword;
+
   async function handleRegister(e: React.FormEvent) {
-    e.preventDefault(); // Prevents page reload
-    setError(""); // Clear previous errors
+    e.preventDefault();
+    setError("");
 
-    // Supabase sign-up request
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    // If Supabase returns an error, show it to the user
-    if (error) {
-      setError(error.message);
+    // Final check before submitting
+    if (!passwordsMatch) {
+      setError("Passwords do not match");
       return;
     }
 
-    // On success, redirect to dashboard
-    // (Note: Supabase may require email confirmation depending on project settings)
+    // Create user
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { handle: username, display_name: username },
+      },
+    });
+
+    if (signUpError) {
+      setError(signUpError.message);
+      return;
+    }
+
     navigate("/dashboard");
   }
 
   return (
-    // Centered full-screen layout
     <div className="flex items-center justify-center min-h-screen p-4">
-      {/* Card container for the registration form */}
       <Card className="w-full max-w-md p-6 space-y-4">
         <h1 className="text-2xl font-semibold text-center">Create Account</h1>
 
-        {/* Registration form */}
         <form onSubmit={handleRegister} className="space-y-4">
+          {/* Username */}
+          <div>
+            <Label>Username</Label>
+            <Input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
+
+          {/* Email */}
           <div>
             <Label>Email</Label>
-            {/* Controlled email input */}
             <Input
               type="email"
               value={email}
@@ -57,9 +77,9 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* Password */}
           <div>
             <Label>Password</Label>
-            {/* Controlled password input */}
             <Input
               type="password"
               value={password}
@@ -68,16 +88,36 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Error message display */}
+          {/* Confirm Password */}
+          <div>
+            <Label>Confirm Password</Label>
+            <Input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+
+            {/* Live feedback */}
+            {confirmPassword.length > 0 && (
+              <p
+                className={`text-sm mt-1 ${
+                  passwordsMatch ? "text-green-500" : "text-red-500"
+                }`}
+              >
+                {passwordsMatch ? "Passwords match" : "Passwords do not match"}
+              </p>
+            )}
+          </div>
+
+          {/* Submit-level error */}
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
-          {/* Submit button */}
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full bg-blue-600">
             Register
           </Button>
         </form>
 
-        {/* Link to login page */}
         <p className="text-center text-sm">
           Already have an account{" "}
           <Link to="/login" className="text-blue-600 hover:underline">

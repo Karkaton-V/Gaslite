@@ -1,37 +1,97 @@
-
+import { useState } from "react";
 import { Post } from "@/shared/ui/post";
+import BottomNav from "@/shared/ui/BottomNav";
+
+const posts = [
+  {
+    id: 1,
+    username: "Followed User",
+    avatarPicture: "./assets/kingBoo.png",
+    postContent: "Hello! You follow me!",
+    likeCount: 420,
+    commentCount: 69,
+  },
+  {
+    id: 2,
+    username: "Tech official",
+    avatarPicture: "./assets/default.png",
+    postContent: "Welcome to LA Tech tweddit!",
+    likeCount: 35,
+    commentCount: 8,
+  },
+  {
+    id: 3,
+    username: "Kyle Prather",
+    avatarPicture: "./assets/druski.png",
+    postContent: "Look who finally got work done!",
+    likeCount: 67,
+    commentCount: 0,
+  },
+];
 
 export default function UserPostsPage() {
-return (
-/*  <>
-    <div className="p-6">
-      <h1 className="text-3xl font-semibold">Recommended</h1>
-      <p className="mt-2 text-gray-600">Welcome to your recommended user posts.</p>
-    </div>
+  const [sortBy, setSortBy] = useState("newest");
+  const [filterBy, setFilterBy] = useState("all");
 
-    for i in range(10) {
-    <div className = "min-h-screen bg-muted p-8 text-foreground">
-      <Post
-       username = GetFollowedUsers(10).GrabUserNumber(i)
-       avatarPicture = username.avatarpicture
-       postContent = GetRecentPost().username.content
-       likeCount = GetRecentPost().username.likeCount
-       commentCount = GetRecentPost().username.commentCount
-      />
-      <br />
-    </div>
-    }
-  </> */
+  const filteredPosts = posts
+    .filter((post) => {
+      if (filterBy === "popular") return post.likeCount >= 100;
+      if (filterBy === "comments") return post.commentCount > 0;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "likes") return b.likeCount - a.likeCount;
+      if (sortBy === "comments") return b.commentCount - a.commentCount;
+      return b.id - a.id;
+    });
 
-<div className = "min-h-screen bg-muted p-8 text-foreground">
-      <Post
-        username = "Followed User"
-        avatarPicture = "./assets/kingBoo.png"
-        postContent = "Hello! You follow me!"
-        likeCount = {420}
-        commentCount = {69}
-      />
-    </div>
+  return (
+    <>
+      <div className="min-h-screen bg-background p-8 pb-24 text-foreground">
+        <div className="mb-6">
+          <h1 className="text-3xl font-semibold">Recommended</h1>
+          <p className="mt-2 text-muted-foreground">
+            Welcome to your recommended user posts.
+          </p>
+        </div>
 
+        <div className="mb-6 flex flex-wrap gap-4">
+          <select
+            value={sortBy}
+            onChange={(event) => setSortBy(event.target.value)}
+            className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+          >
+            <option value="newest">Sort: Newest</option>
+            <option value="likes">Sort: Most liked</option>
+            <option value="comments">Sort: Most commented</option>
+          </select>
+
+          <select
+            value={filterBy}
+            onChange={(event) => setFilterBy(event.target.value)}
+            className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+          >
+            <option value="all">Filter: All posts</option>
+            <option value="popular">Filter: Popular posts</option>
+            <option value="comments">Filter: Has comments</option>
+          </select>
+        </div>
+
+        <div className="space-y-4">
+          {filteredPosts.map((post) => (
+            <Post
+              key={post.id}
+              username={post.username}
+              avatarPicture={post.avatarPicture}
+              postContent={post.postContent}
+              likeCount={post.likeCount}
+              commentCount={post.commentCount}
+            />
+          ))}
+        </div>
+      </div>
+
+      <BottomNav />
+    </>
   );
 }
