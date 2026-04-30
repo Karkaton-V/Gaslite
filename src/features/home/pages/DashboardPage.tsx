@@ -15,7 +15,7 @@ export default function DashboardPage() {
     .from("avatars")
     .getPublicUrl("default/default.png");
 
-  const avatarPicture = data.publicUrl;
+  const picture = data.publicUrl;
 
   // Handles Supabase logout
   async function handleLogout() {
@@ -69,7 +69,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-background p-8 pb-24 text-foreground">
         <Post
           username="alyx"
-          avatarPicture="default/default.png"
+          avatarPicture={picture}
           postContent="This is a test post component"
           likeCount={0}
           commentCount={0}
