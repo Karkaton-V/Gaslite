@@ -8,6 +8,15 @@ import  BottomNav  from "@/shared/ui/BottomNav"
 export default function DashboardPage() {
   const navigate = useNavigate();
 
+
+  // lines 13-17 are used for testing avatar picture
+  // will be deleted in the future
+  const { data } = supabase.storage
+    .from("avatars")
+    .getPublicUrl("default/default.png");
+
+  const avatarPicture = data.publicUrl;
+
   // Handles Supabase logout
   async function handleLogout() {
     await supabase.auth.signOut(); // <-- must include parentheses
@@ -60,7 +69,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-background p-8 pb-24 text-foreground">
         <Post
           username="alyx"
-          avatarPicture="default/default-avatar.png"
+          avatarPicture="default/default.png"
           postContent="This is a test post component"
           likeCount={0}
           commentCount={0}
