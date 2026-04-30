@@ -8,7 +8,6 @@ import UserPostsPage from "@/features/home/pages/UserPostsPage";
 import CommunitiesPage from "@/features/home/pages/CommunitiesPage";
 import ProfilePage from "@/features/home/pages/ProfilePage";
 import UserSettingsPage from "@/features/home/pages/UserSettingsPage";
-import Test from "@/features/home/pages/DBTest";
 import MessagesPage from "@/features/home/pages/MessagesPage";
 
 import { useProtectedRoute } from "@/shared/hooks/useProtectedRoute";

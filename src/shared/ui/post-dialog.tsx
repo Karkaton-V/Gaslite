@@ -13,7 +13,7 @@ import { Field, FieldDescription, FieldLabel } from "@/shared/ui/field"
 import { Textarea } from "@/shared/ui/textarea"
 import { cn } from "@/shared/lib/utils/index"
 import { supabase } from "@/shared/lib/supabase/client";
-import { createPost } from "@/features/posts/api/createPost";
+import { createPost } from "@/features/posts/api/postFunctions";
 
 // using the shadcn dialog page for help
 
@@ -38,7 +38,7 @@ export function PostDialog() {
             {/* DialogTrigger determines what actually opens the dialog
             in this case, it's a button */}
                 <DialogTrigger asChild>
-                    <Button variant="outline">New Post</Button>
+                    <Button>New Post</Button>
                 </DialogTrigger>
                 
                 <DialogContent className = "sm:max-w-2xl min-h-[30vh] overflow-y-auto">

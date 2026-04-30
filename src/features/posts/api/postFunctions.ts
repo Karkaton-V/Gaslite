@@ -8,6 +8,11 @@ type createPostInfo = {
     image?: string | null;
 }
 
+type likePostInfo = {
+    postId: string,
+    userId: string
+}
+
 
 // helper function to add posts to database
 export async function createPost(input: createPostInfo) {
@@ -39,4 +44,34 @@ export async function createPost(input: createPostInfo) {
     
     if (error) throw error;
     return data;
+}
+
+export async function deletePost() {
+    /*
+        TODO:
+        This will function similarly to createPost()
+        It grabs user auth and post ID and removes the row from the db
+    */
+}
+
+export async function likePost() {
+
+    /*
+        TODO:
+        This function should grab auth data from supabase and verify
+        Then it grabs the user id and post id
+        Then it updates the liked posts table using the post ID and user ID
+        See createPost.ts for examples
+    */
+}
+
+
+export async function unlikePost() {
+
+    /*
+        TODO:
+        This function should behave similarly to likePost()
+        The difference is instead of adding a row to the table, it deletes the row
+        Must be very careful to delete only the correct row!
+    */
 }

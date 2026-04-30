@@ -56,7 +56,7 @@ const dummyConversations: Conversation[] = [
 export default function MessagesPage() {
   return (
     <>
-    <div className="min-h-screen bg-muted p-8 text-foreground">
+    <div className="min-h-screen bg-background p-8 text-foreground">
       <div className="mx-auto w-full max-w-2xl">
         <h1 className="text-3xl font-semibold">Messages</h1>
 
