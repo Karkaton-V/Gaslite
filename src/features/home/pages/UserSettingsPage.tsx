@@ -45,7 +45,7 @@ export default function UserSettingsPage() {
       <div className="p-6 flex items-center justify-between">
         {/* on the left: page title */}
         <div>
-          <h1 className="text-3x1 font-semibold">User Settings</h1>
+          <h1 className="text-3xl font-semibold">User Settings</h1>
           <p className="mt-2 text-muted-foreground">
             Settings page coming soon.
           </p>
