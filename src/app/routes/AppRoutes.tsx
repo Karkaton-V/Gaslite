@@ -19,12 +19,16 @@ export default function AppRoutes() {
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+<<<<<<< Updated upstream
 
         <Route path="/passwordreset" element={
             <Protected>
               <PasswordResetPage />
             </Protected>
           } />
+=======
+        <Route path="/passwordreset" element={<PasswordResetPage />} />
+>>>>>>> Stashed changes
 
         <Route path="/dashboard" element={
             <Protected>
