@@ -1,4 +1,5 @@
 import { supabase } from "@/shared/lib/supabase/client";
+import { Post } from "@/shared/ui/post";
 
 
 // type block to help with data 
@@ -74,4 +75,40 @@ export async function unlikePost() {
         The difference is instead of adding a row to the table, it deletes the row
         Must be very careful to delete only the correct row!
     */
+}
+
+
+export async function getPostFromUser(handle: string, limit: number) {
+
+    // grab auth data from supabase and check if logged in
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || authData.user == null) throw new Error("Must be logged in");
+
+    const userId = handle;
+
+    // query database for posts under the matching user id, limit results to the specified number
+    const { data, error } = await supabase
+        .from('user_posts')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(limit);
+
+    if (error) throw error;
+    return data;
+
+}
+
+
+export async function getPostFromFollowed(handleSelf: string, handleFollowed: string, limit: number) {
+
+    const { data, error } = await supabase.rpc("is_following", {
+        user1: handleSelf,
+        user2: handleFollowed
+    });
+    if (data) {
+        return getPostFromUser(handleFollowed, limit);
+    }
+
+    if (error) throw error;
+
 }
