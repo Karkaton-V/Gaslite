@@ -6,7 +6,7 @@ const posts = [
   {
     id: 1,
     username: "Followed User",
-    avatarPicture: "./assets/kingBoo.png",
+    avatarPicture: "/kingBoo.png",
     postContent: "Hello! You follow me!",
     likeCount: 420,
     commentCount: 69,
@@ -14,7 +14,7 @@ const posts = [
   {
     id: 2,
     username: "Tech official",
-    avatarPicture: "./assets/default.png",
+    avatarPicture: "/default-avatar.png",
     postContent: "Welcome to LA Tech tweddit!",
     likeCount: 35,
     commentCount: 8,
@@ -22,7 +22,7 @@ const posts = [
   {
     id: 3,
     username: "Kyle Prather",
-    avatarPicture: "./assets/druski.png",
+    avatarPicture: "/druski.png",
     postContent: "Look who finally got work done!",
     likeCount: 67,
     commentCount: 0,
@@ -58,8 +58,8 @@ export default function FollowingPage() {
         <div className="mb-6 flex flex-wrap gap-4">
           <select
             value={sortBy}
-            onChange={(event) => setSortBy(event.target.value)}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+            onChange={(e) => setSortBy(e.target.value)}
+            className="rounded-md border bg-background px-3 py-2 text-sm"
           >
             <option value="newest">Sort: Newest</option>
             <option value="likes">Sort: Most liked</option>
@@ -68,8 +68,8 @@ export default function FollowingPage() {
 
           <select
             value={filterBy}
-            onChange={(event) => setFilterBy(event.target.value)}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+            onChange={(e) => setFilterBy(e.target.value)}
+            className="rounded-md border bg-background px-3 py-2 text-sm"
           >
             <option value="all">Filter: All posts</option>
             <option value="popular">Filter: Popular posts</option>

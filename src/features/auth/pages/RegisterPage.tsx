@@ -1,22 +1,20 @@
 import { useState } from "react";
-import { supabase } from "@/shared/lib/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Card } from "@/shared/ui/card";
 import { Label } from "@/shared/ui/label";
+import { registerUser } from "../api/user/userFunctions";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
 
-  // Controlled form state
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
-  // Derived state: do passwords match?
   const passwordsMatch =
     password.length > 0 &&
     confirmPassword.length > 0 &&
@@ -26,23 +24,15 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
-    // Final check before submitting
     if (!passwordsMatch) {
       setError("Passwords do not match");
       return;
     }
 
-    // Create user
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { handle: username, display_name: username },
-      },
-    });
+    const { error } = await registerUser(email, password, username);
 
-    if (signUpError) {
-      setError(signUpError.message);
+    if (error) {
+      setError(error.message);
       return;
     }
 
@@ -55,7 +45,6 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-semibold text-center">Create Account</h1>
 
         <form onSubmit={handleRegister} className="space-y-4">
-          {/* Username */}
           <div>
             <Label>Username</Label>
             <Input
@@ -66,7 +55,6 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Email */}
           <div>
             <Label>Email</Label>
             <Input
@@ -77,7 +65,6 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Password */}
           <div>
             <Label>Password</Label>
             <Input
@@ -88,7 +75,6 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Confirm Password */}
           <div>
             <Label>Confirm Password</Label>
             <Input
@@ -98,7 +84,6 @@ export default function RegisterPage() {
               required
             />
 
-            {/* Live feedback */}
             {confirmPassword.length > 0 && (
               <p
                 className={`text-sm mt-1 ${
@@ -110,7 +95,6 @@ export default function RegisterPage() {
             )}
           </div>
 
-          {/* Submit-level error */}
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
           <Button type="submit" className="w-full bg-blue-600">

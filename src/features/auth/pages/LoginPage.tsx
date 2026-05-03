@@ -5,6 +5,7 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Card } from "@/shared/ui/card";
 import { Label } from "@/shared/ui/label";
+import { loginUser } from "../api/user/userFunctions";
 
 export default function LoginPage() {
   // React Router navigation hook
@@ -21,10 +22,7 @@ export default function LoginPage() {
     setError(""); // Clear previous errors
 
     // Supabase password-based login
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await loginUser(email, password);
 
     // If Supabase returns an error, show it to the user
     if (error) {

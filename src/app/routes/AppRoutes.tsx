@@ -3,9 +3,12 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
 import PasswordResetPage from "@/features/auth/pages/PasswordResetPage";
+
 import DashboardPage from "@/features/home/pages/DashboardPage";
 import FollowingPage from "@/features/home/pages/FollowingPage";
-import CommunitiesPage from "@/features/home/pages/CommunitiesPage";
+import CommunitiesDirectoryPage from "@/features/home/pages/CommunitiesDirectoryPage";
+import CreateCommunityPage from "@/features/home/pages/CreateCommunityPage";
+import SingleCommunityPage from "@/features/home/pages/SingleCommunityPage";
 import ProfilePage from "@/features/home/pages/ProfilePage";
 import UserSettingsPage from "@/features/home/pages/UserSettingsPage";
 import MessagesPage from "@/features/home/pages/MessagesPage";
@@ -63,11 +66,32 @@ export default function AppRoutes() {
           }
         />
 
+        {/* Communities Directory */}
         <Route
           path="/communities"
           element={
             <Protected>
-              <CommunitiesPage />
+              <CommunitiesDirectoryPage />
+            </Protected>
+          }
+        />
+
+        {/* Create Community */}
+        <Route
+          path="/communities/create"
+          element={
+            <Protected>
+              <CreateCommunityPage />
+            </Protected>
+          }
+        />
+
+        {/* Single Community */}
+        <Route
+          path="/community/:id"
+          element={
+            <Protected>
+              <SingleCommunityPage />
             </Protected>
           }
         />
