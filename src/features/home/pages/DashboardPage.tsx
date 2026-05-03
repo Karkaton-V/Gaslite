@@ -34,9 +34,8 @@ export default function DashboardPage() {
           <Button variant="outline" onClick={() => navigate("/messages")}>
             Messages
           </Button>
-          <Button variant="outline" onClick={() => navigate("/usersettings")}>
-            Settings
-          </Button>
+
+          {/* Right side: logout button */}
           <Button variant="destructive" onClick={handleLogout}>
             Logout
           </Button>

@@ -31,6 +31,15 @@ export function PostDialog() {
       }}
     >
       {/* DialogTrigger determines what actually opens the dialog
+    return (
+
+        // set errorsmg to null when dialog box opens
+        <Dialog open = {isDialogOpen}
+            onOpenChange = {(onNextOpen) => {
+                setIsDialogOpen(onNextOpen);
+                if (onNextOpen) setErrorMsg(null);
+            }}>
+            {/* DialogTrigger determines what actually opens the dialog
             in this case, it's a button */}
       <DialogTrigger asChild>
         <Button>New Post</Button>
