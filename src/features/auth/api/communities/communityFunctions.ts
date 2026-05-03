@@ -1,31 +1,13 @@
 /**
  * Community API utilities
- * -----------------------
- * Centralized wrapper around all Supabase operations related to:
- * - community metadata (name, picture, follower_count)
- * - follow/unfollow relationships
- * - community posts and profile joins
- *
- * Keeping this logic isolated prevents page components from
- * becoming tightly coupled to Supabase queries. If the schema
- * changes or we move to RPC/Edge Functions later, only this file
- * needs to be updated.
+ * Centralized wrapper for all Supabase operations.
  */
 
 import { supabase } from "@/shared/lib/supabase/client";
 
-/**
- * getCommunity
- * ------------
- * Fetches a single community by ID.
- *
- * IMPORTANT:
- * Supabase does NOT automatically return computed columns
- * (like follower_count) when using `select("*")`.
- *
- * follower_count is maintained by database triggers, so we must
- * explicitly select it here or the UI will always receive stale data.
- */
+/* -----------------------------
+   Fetch a single community
+------------------------------ */
 export async function getCommunity(id: string) {
   return await supabase
     .from("communities")
@@ -34,19 +16,42 @@ export async function getCommunity(id: string) {
     .single();
 }
 
-/**
- * getCommunityPosts
- * -----------------
- * Retrieves all posts for a community, sorted newest → oldest.
- *
- * Includes a join on the profiles table so each post already
- * contains the author's:
- * - display_name
- * - handle
- * - profile_pic
- *
- * This avoids extra client-side fetches and keeps the UI fast.
- */
+/* -----------------------------
+   Fetch all communities
+------------------------------ */
+export async function getAllCommunities() {
+  return await supabase
+    .from("communities")
+    .select("id, name, picture, follower_count")
+    .order("follower_count", { ascending: false });
+}
+
+/* -----------------------------
+   Subscribe to follower changes
+------------------------------ */
+export function subscribeToCommunityFollowers(callback: () => void) {
+  const channel = supabase
+    .channel("community-followers-realtime")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "community_followers",
+      },
+      callback,
+    )
+    .subscribe();
+
+  // React cleanup must be synchronous — do NOT return the Promise
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+/* -----------------------------
+   Fetch posts for a community
+------------------------------ */
 export async function getCommunityPosts(id: string) {
   return await supabase
     .from("community_posts")
@@ -55,23 +60,13 @@ export async function getCommunityPosts(id: string) {
     .order("created_at", { ascending: false });
 }
 
-/**
- * followCommunity
- * ---------------
- * Creates a follower relationship between the current user
- * and the specified community.
- *
- * The database trigger automatically increments follower_count,
- * which keeps the logic consistent even if multiple clients
- * follow/unfollow simultaneously.
- *
- * Requires authentication.
- */
+/* -----------------------------
+   Follow a community
+------------------------------ */
 export async function followCommunity(communityId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) return { error: "Not logged in" };
 
   return await supabase.from("community_followers").insert({
@@ -80,20 +75,13 @@ export async function followCommunity(communityId: string) {
   });
 }
 
-/**
- * unfollowCommunity
- * -----------------
- * Removes the follower relationship for the current user.
- *
- * The trigger on community_followers automatically decrements
- * follower_count, so the UI only needs to re-fetch the community
- * to stay in sync.
- */
+/* -----------------------------
+   Unfollow a community
+------------------------------ */
 export async function unfollowCommunity(communityId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) return { error: "Not logged in" };
 
   return await supabase
@@ -103,19 +91,13 @@ export async function unfollowCommunity(communityId: string) {
     .eq("community_id", communityId);
 }
 
-/**
- * getFollowStatus
- * ---------------
- * Determines whether the current user is following a community.
- *
- * Used to initialize the follow button state on page load.
- * Returns a boolean instead of raw DB data for convenience.
- */
+/* -----------------------------
+   Check follow status
+------------------------------ */
 export async function getFollowStatus(communityId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) return false;
 
   const { data } = await supabase
@@ -128,17 +110,9 @@ export async function getFollowStatus(communityId: string) {
   return !!data;
 }
 
-/**
- * createCommunityPost
- * -------------------
- * Inserts a new text post into the community.
- *
- * The page subscribes to realtime INSERT events, so new posts
- * appear instantly without requiring a manual refresh.
- *
- * This function only handles the DB write — the UI handles
- * scrolling, clearing input, and optimistic updates.
- */
+/* -----------------------------
+   Create a post
+------------------------------ */
 export async function createCommunityPost(
   communityId: string,
   content: string,
@@ -146,7 +120,6 @@ export async function createCommunityPost(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) return { error: "Not logged in" };
 
   return await supabase.from("community_posts").insert({

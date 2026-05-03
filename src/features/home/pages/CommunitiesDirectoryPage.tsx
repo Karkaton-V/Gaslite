@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/shared/lib/supabase/client";
+
+import {
+  getAllCommunities,
+  subscribeToCommunityFollowers,
+} from "../../auth/api/communities/communityFunctions";
 
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
@@ -14,14 +18,8 @@ export default function CommunitiesDirectoryPage() {
   async function loadCommunities() {
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from("communities")
-      .select("id, name, picture, follower_count")
-      .order("follower_count", { ascending: false });
-
-    if (!error && data) {
-      setCommunities(data);
-    }
+    const { data, error } = await getAllCommunities();
+    if (!error && data) setCommunities(data);
 
     setLoading(false);
   }
@@ -29,23 +27,12 @@ export default function CommunitiesDirectoryPage() {
   useEffect(() => {
     loadCommunities();
 
-    const followerChannel = supabase
-      .channel("community-followers-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "community_followers",
-        },
-        () => {
-          loadCommunities();
-        },
-      )
-      .subscribe();
+    const unsubscribe = subscribeToCommunityFollowers(() => {
+      loadCommunities();
+    });
 
     return () => {
-      supabase.removeChannel(followerChannel);
+      unsubscribe();
     };
   }, []);
 
@@ -55,10 +42,7 @@ export default function CommunitiesDirectoryPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Communities</h1>
 
-          <Button
-            className="relative z-10"
-            onClick={() => navigate("/communities/create")}
-          >
+          <Button onClick={() => navigate("/communities/create")}>
             Create
           </Button>
         </div>

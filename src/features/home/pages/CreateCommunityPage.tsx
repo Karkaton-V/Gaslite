@@ -28,16 +28,14 @@ export default function CreateCommunityPage() {
 
     let pictureUrl: string | null = null;
 
-    // Upload picture if provided
     if (picture) {
       const fileName = `community-${Date.now()}`;
 
-      const { data: uploadData, error: uploadErr } = await supabase.storage
+      const { error: uploadErr } = await supabase.storage
         .from("community-pictures")
         .upload(`public/${fileName}`, picture);
 
       if (uploadErr) {
-        console.error("Upload error:", uploadErr);
         setErrorMsg("Failed to upload picture.");
         setLoading(false);
         return;
@@ -50,7 +48,6 @@ export default function CreateCommunityPage() {
       pictureUrl = publicUrl.publicUrl;
     }
 
-    // Insert community
     const { data, error } = await supabase
       .from("communities")
       .insert({
@@ -62,7 +59,6 @@ export default function CreateCommunityPage() {
       .single();
 
     if (error) {
-      console.error("Insert error:", error);
       setErrorMsg("Failed to create community.");
       setLoading(false);
       return;
