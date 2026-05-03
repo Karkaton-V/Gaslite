@@ -17,7 +17,7 @@ import BottomNav from "@/shared/ui/BottomNav";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { supabase } from "@/shared/lib/supabase/client";
 
-// Types based on your schema
+// Types based on schema
 type Community = {
   id: string;
   created_at: string;
