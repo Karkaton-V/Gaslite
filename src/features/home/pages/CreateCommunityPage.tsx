@@ -10,11 +10,21 @@ import BottomNav from "@/shared/ui/BottomNav";
 export default function CreateCommunityPage() {
   const navigate = useNavigate();
 
+  // Form state
   const [name, setName] = useState("");
   const [picture, setPicture] = useState<File | null>(null);
+
+  // UX state
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  /**
+   * Handles community creation:
+   * 1. Validates input
+   * 2. Uploads picture (optional)
+   * 3. Inserts new community row
+   * 4. Redirects to the new community page
+   */
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg("");
@@ -28,6 +38,10 @@ export default function CreateCommunityPage() {
 
     let pictureUrl: string | null = null;
 
+    /**
+     * Upload picture to Supabase Storage.
+     * Stored under: community-pictures/public/<timestamp>
+     */
     if (picture) {
       const fileName = `community-${Date.now()}`;
 
@@ -41,6 +55,7 @@ export default function CreateCommunityPage() {
         return;
       }
 
+      // Convert storage path → public URL
       const { data: publicUrl } = supabase.storage
         .from("community-pictures")
         .getPublicUrl(`public/${fileName}`);
@@ -48,6 +63,10 @@ export default function CreateCommunityPage() {
       pictureUrl = publicUrl.publicUrl;
     }
 
+    /**
+     * Insert the new community.
+     * follower_count starts at 0 — triggers will update it later.
+     */
     const { data, error } = await supabase
       .from("communities")
       .insert({
@@ -64,6 +83,7 @@ export default function CreateCommunityPage() {
       return;
     }
 
+    // Navigate to the new community page
     navigate(`/community/${data.id}`);
   }
 
@@ -74,8 +94,10 @@ export default function CreateCommunityPage() {
 
         <Card className="p-4 space-y-4">
           <form onSubmit={handleCreate} className="space-y-4">
+            {/* Error message */}
             {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
 
+            {/* Community name input */}
             <div>
               <label className="text-sm font-medium">Community Name</label>
               <Input
@@ -85,6 +107,7 @@ export default function CreateCommunityPage() {
               />
             </div>
 
+            {/* Optional picture upload */}
             <div>
               <label className="text-sm font-medium">Community Picture</label>
               <Input
@@ -94,6 +117,7 @@ export default function CreateCommunityPage() {
               />
             </div>
 
+            {/* Submit button */}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Creating..." : "Create Community"}
             </Button>

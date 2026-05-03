@@ -1,13 +1,22 @@
 /**
  * Community API utilities
- * Centralized wrapper for all Supabase operations.
+ * -----------------------
+ * Centralized wrapper for all Supabase operations related to:
+ * - community metadata
+ * - follow/unfollow relationships
+ * - community posts
+ *
+ * Keeping all DB logic here prevents UI components from becoming
+ * tightly coupled to Supabase. If the schema changes later,
+ * only this file needs to be updated.
  */
 
 import { supabase } from "@/shared/lib/supabase/client";
 
-/* -----------------------------
-   Fetch a single community
------------------------------- */
+/* -------------------------------------------------------------
+   Fetch a single community by ID
+   Includes follower_count (maintained by triggers)
+-------------------------------------------------------------- */
 export async function getCommunity(id: string) {
   return await supabase
     .from("communities")
@@ -16,9 +25,10 @@ export async function getCommunity(id: string) {
     .single();
 }
 
-/* -----------------------------
+/* -------------------------------------------------------------
    Fetch all communities
------------------------------- */
+   Sorted by follower_count (descending)
+-------------------------------------------------------------- */
 export async function getAllCommunities() {
   return await supabase
     .from("communities")
@@ -26,9 +36,11 @@ export async function getAllCommunities() {
     .order("follower_count", { ascending: false });
 }
 
-/* -----------------------------
-   Subscribe to follower changes
------------------------------- */
+/* -------------------------------------------------------------
+   Realtime subscription for follower changes
+   Fires callback on INSERT/DELETE in community_followers
+   Cleanup must be synchronous (React requirement)
+-------------------------------------------------------------- */
 export function subscribeToCommunityFollowers(callback: () => void) {
   const channel = supabase
     .channel("community-followers-realtime")
@@ -43,15 +55,16 @@ export function subscribeToCommunityFollowers(callback: () => void) {
     )
     .subscribe();
 
-  // React cleanup must be synchronous — do NOT return the Promise
+  // React cleanup must NOT return a Promise
   return () => {
     supabase.removeChannel(channel);
   };
 }
 
-/* -----------------------------
+/* -------------------------------------------------------------
    Fetch posts for a community
------------------------------- */
+   Includes profile join for author info
+-------------------------------------------------------------- */
 export async function getCommunityPosts(id: string) {
   return await supabase
     .from("community_posts")
@@ -60,13 +73,15 @@ export async function getCommunityPosts(id: string) {
     .order("created_at", { ascending: false });
 }
 
-/* -----------------------------
+/* -------------------------------------------------------------
    Follow a community
------------------------------- */
+   Triggers increment follower_count
+-------------------------------------------------------------- */
 export async function followCommunity(communityId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   if (!user) return { error: "Not logged in" };
 
   return await supabase.from("community_followers").insert({
@@ -75,13 +90,15 @@ export async function followCommunity(communityId: string) {
   });
 }
 
-/* -----------------------------
+/* -------------------------------------------------------------
    Unfollow a community
------------------------------- */
+   Triggers decrement follower_count
+-------------------------------------------------------------- */
 export async function unfollowCommunity(communityId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   if (!user) return { error: "Not logged in" };
 
   return await supabase
@@ -91,13 +108,15 @@ export async function unfollowCommunity(communityId: string) {
     .eq("community_id", communityId);
 }
 
-/* -----------------------------
-   Check follow status
------------------------------- */
+/* -------------------------------------------------------------
+   Check if current user follows a community
+   Returns boolean for convenience
+-------------------------------------------------------------- */
 export async function getFollowStatus(communityId: string) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   if (!user) return false;
 
   const { data } = await supabase
@@ -110,9 +129,10 @@ export async function getFollowStatus(communityId: string) {
   return !!data;
 }
 
-/* -----------------------------
-   Create a post
------------------------------- */
+/* -------------------------------------------------------------
+   Create a new post inside a community
+   Realtime subscription on the page will auto-update the feed
+-------------------------------------------------------------- */
 export async function createCommunityPost(
   communityId: string,
   content: string,
@@ -120,6 +140,7 @@ export async function createCommunityPost(
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   if (!user) return { error: "Not logged in" };
 
   return await supabase.from("community_posts").insert({

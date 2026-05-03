@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 
+//Centralized community API functions
 import {
   getCommunity,
   getCommunityPosts,
@@ -17,6 +18,7 @@ import BottomNav from "@/shared/ui/BottomNav";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { supabase } from "@/shared/lib/supabase/client";
 
+//Types based on Supabase schema
 type Community = {
   id: string;
   created_at: string;
@@ -41,36 +43,54 @@ type CommunityPost = {
 };
 
 export default function SingleCommunityPage() {
-  const { id } = useParams();
+  const { id } = useParams(); //community ID from URL
 
+  //Core page state
   const [community, setCommunity] = useState<Community | null>(null);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [newPost, setNewPost] = useState("");
   const [loading, setLoading] = useState(true);
 
+  //Used to scroll to bottom after posting
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  /**
+   * Loads all community-related data:
+   * - Community metadata
+   * - Posts
+   * - Follow status
+   *
+   * This keeps the page in sync with the database.
+   */
   async function loadAll() {
     if (!id) return;
 
     setLoading(true);
 
+    //Fetch community info
     const { data: c } = await getCommunity(id);
     setCommunity(c as Community);
 
+    //Fetch posts
     const { data: p } = await getCommunityPosts(id);
     setPosts((p || []) as CommunityPost[]);
 
+    //Check if user follows this community
     const following = await getFollowStatus(id);
     setIsFollowing(following);
 
     setLoading(false);
   }
 
+  /**
+   * Initial load + realtime subscription for new posts.
+   * This makes the feed update instantly when someone posts.
+   */
   useEffect(() => {
     loadAll();
 
+    // Subscribe to realtime INSERT events for posts in this community
     const channel = supabase
       .channel("community-posts-realtime")
       .on(
@@ -82,35 +102,47 @@ export default function SingleCommunityPage() {
           filter: `community_id=eq.${id}`,
         },
         (payload) => {
+          //Prepend new post to the feed
           setPosts((prev) => [payload.new as CommunityPost, ...prev]);
         },
       )
       .subscribe();
-
+    // Cleanup: remove channel (must be synchronous)
     return () => {
       supabase.removeChannel(channel);
     };
   }, [id]);
 
+  /**
+   * Handles follow/unfollow with optimistic UI.
+   * The UI updates instantly, then we sync with the DB.
+   */
   async function toggleFollow() {
     if (!id) return;
 
     const next = !isFollowing;
-    setIsFollowing(next);
+    setIsFollowing(next); //optimistic update
 
+    //Perform DB action
     const result = next
       ? await followCommunity(id)
       : await unfollowCommunity(id);
 
+    //If DB failed, revert UI
     if (result?.error) {
       setIsFollowing(!next);
       return;
     }
 
+    //Refresh community to update follower_count
     const { data: c } = await getCommunity(id);
     setCommunity(c ? { ...c } : null);
   }
 
+  /**
+   * Creates a new post inside the community.
+   * After posting, scrolls to bottom to show the new post.
+   */
   async function handleCreatePost(e: React.FormEvent) {
     e.preventDefault();
     if (!id || !newPost.trim()) return;
@@ -118,11 +150,13 @@ export default function SingleCommunityPage() {
     await createCommunityPost(id, newPost);
     setNewPost("");
 
+    // Smooth scroll to bottom
     setTimeout(() => {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
   }
 
+  // loading state
   if (loading || !community) {
     return <p className="p-4">Loading community…</p>;
   }
@@ -130,6 +164,9 @@ export default function SingleCommunityPage() {
   return (
     <>
       <div className="max-w-2xl mx-auto p-4 pb-24 space-y-6">
+        {/* ===========================
+            COMMUNITY HEADER
+        ============================ */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img
@@ -155,6 +192,9 @@ export default function SingleCommunityPage() {
           </Button>
         </div>
 
+        {/* ===========================
+            CREATE POST INPUT
+        ============================ */}
         <Card className="p-4 space-y-2">
           <form onSubmit={handleCreatePost} className="space-y-2">
             <Input
@@ -168,9 +208,13 @@ export default function SingleCommunityPage() {
           </form>
         </Card>
 
+        {/* ===========================
+            POSTS FEED
+        ============================ */}
         <div className="space-y-4">
           {posts.map((post) => (
             <Card key={post.id} className="p-4">
+              {/* Post header: avatar + name */}
               <div className="flex items-center gap-2 mb-2">
                 <Avatar>
                   <AvatarImage src={post.profiles.profile_pic} />
@@ -187,8 +231,10 @@ export default function SingleCommunityPage() {
                 </div>
               </div>
 
+              {/* Post content */}
               <p className="mb-2">{post.content}</p>
 
+              {/* Optional image */}
               {post.image && (
                 <img
                   src={post.image}
@@ -199,6 +245,7 @@ export default function SingleCommunityPage() {
           ))}
         </div>
 
+        {/* Scroll anchor */}
         <div ref={bottomRef} />
       </div>
 
