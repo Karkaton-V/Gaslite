@@ -1,20 +1,21 @@
 import { supabase } from "@/shared/lib/supabase/client";
 import { useState } from "react";
 import { getFollowedUsers } from "@/features/users/api/userFunctions";
+import { getFeedForUser } from "../../users/api/userFunctions";
 import { getPostFromFollowed } from "@/features/posts/api/postFunctions";
 import { Post } from "@/shared/ui/post";
 import BottomNav from "@/shared/ui/BottomNav";
 
 const { data: authData, error: authError } = await supabase.auth.getUser();
-const allFollowersIDs = await getPostFromFollowed(authData.user.id, getFollowedUsers())
+const allFollowersPosts = await getFeedForUser(getPostFromFollowed(authData.user.id, getFollowedUsers()));
 const followedPosts = [
   {
-    id: allFollowersIDs,
-    username: "AngryCodingGameNerd",
-    avatarPicture: "/default-avatar.png",
-    postContent: "I HATE CODING",
-    likeCount: 420,
-    commentCount: 69,
+    id: allFollowersPosts.handle,
+    username: allFollowersPosts.display_name,
+    avatarPicture: allFollowersPosts.profile_pic,
+    postContent: allFollowersPosts.content,
+    likeCount: allFollowersPosts.like_count,
+    commentCount: allFollowersPosts.comment_count,
   },
 ];
 

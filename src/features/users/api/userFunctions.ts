@@ -117,3 +117,22 @@ export async function getFollowedUsers() {
 
   return data;
 }
+
+export async function getFeedForUser(userId: string) {
+    //Get list of followed users
+    const { data: follows } = await supabase
+    .from("following")
+    .select("isFollowed")
+    .eq("isFollowing", userId);
+
+  const followedIds = follows?.map((f) => f.isFollowed) || [];
+
+  if (followedIds.length === 0) return { data: [], error: null };
+
+  //get posts from those users
+  return await supabase
+    .from("user_posts")
+    .select("*, profiles(display_name, handle, profile_pic)")
+    .in("user_id", followedIds)
+    .order("created_at", { ascending: false });
+}
