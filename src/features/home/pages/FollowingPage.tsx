@@ -40,6 +40,12 @@ export default function FollowingPage() {
     }
 
     loadFeed();
+
+    // arrow function to reload feed
+    const onPosted = () => void loadFeed();
+    // add event listener for post creation
+    window.addEventListener("post_created", onPosted);
+    return () => window.removeEventListener("post_created", onPosted);
   }, []);
 
   /**

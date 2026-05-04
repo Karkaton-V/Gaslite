@@ -148,6 +148,7 @@ export default function SingleCommunityPage() {
     if (!id || !newPost.trim()) return;
 
     await createCommunityPost(id, newPost);
+    loadAll();
     setNewPost("");
 
     // Smooth scroll to bottom

@@ -62,6 +62,8 @@ export function PostDialog() {
               await createPost({
                 content: postText,
               });
+              // send event, used for page updating
+              window.dispatchEvent(new CustomEvent("post_created"));
               setPostText("");
               setIsDialogOpen(false);
             } catch (error: any) {
