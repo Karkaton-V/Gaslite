@@ -105,6 +105,7 @@ export async function updateAvatar() {}
 
 export async function getFollowedUsers() {
   const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || authData.user == null) throw new Error("Must be logged in");
 
   const userId = authData.user.id;
 
