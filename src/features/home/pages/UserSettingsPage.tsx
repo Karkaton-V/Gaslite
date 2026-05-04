@@ -67,7 +67,7 @@ export default function UserSettingsPage() {
   }
 
   // this function is used on form submit
-  async function handleProfileChange(event) {
+  async function handleProfileChange(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     // grab form object
     const form = event.currentTarget;
