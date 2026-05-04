@@ -1,5 +1,4 @@
 import { supabase } from "@/shared/lib/supabase/client";
-import { Post } from "@/shared/ui/post";
 
 
 // type block to help with data 
@@ -78,7 +77,7 @@ export async function unlikePost() {
 }
 
 
-export async function getPostFromUser(handle: string, limit: number) {
+export async function getPostFromUser(handle: string) {
 
     // grab auth data from supabase and check if logged in
     const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -90,8 +89,7 @@ export async function getPostFromUser(handle: string, limit: number) {
     const { data, error } = await supabase
         .from('user_posts')
         .select('id')
-        .eq('user_id', userId)
-        .limit(limit);
+        .eq('user_id', userId);
 
     if (error) throw error;
     return data;
@@ -99,14 +97,14 @@ export async function getPostFromUser(handle: string, limit: number) {
 }
 
 
-export async function getPostFromFollowed(handleSelf: string, handleFollowed: string, limit: number) {
+export async function getPostFromFollowed(handleSelf: string, handleFollowed: string) {
 
     const { data, error } = await supabase.rpc("is_following", {
         user1: handleSelf,
         user2: handleFollowed
     });
     if (data) {
-        return getPostFromUser(handleFollowed, limit);
+        return getPostFromUser(handleFollowed);
     }
 
     if (error) throw error;

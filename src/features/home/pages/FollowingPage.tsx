@@ -1,31 +1,20 @@
+import { supabase } from "@/shared/lib/supabase/client";
 import { useState } from "react";
+import { getFollowedUsers } from "@/features/users/api/userFunctions";
+import { getPostFromFollowed } from "@/features/posts/api/postFunctions";
 import { Post } from "@/shared/ui/post";
 import BottomNav from "@/shared/ui/BottomNav";
 
-const posts = [
+const { data: authData, error: authError } = await supabase.auth.getUser();
+const allFollowersIDs = await getPostFromFollowed(authData.user.id, getFollowedUsers())
+const followedPosts = [
   {
-    id: 1,
-    username: "Followed User",
-    avatarPicture: "/kingBoo.png",
-    postContent: "Hello! You follow me!",
+    id: allFollowersIDs,
+    username: "AngryCodingGameNerd",
+    avatarPicture: "/default-avatar.png",
+    postContent: "I HATE CODING",
     likeCount: 420,
     commentCount: 69,
-  },
-  {
-    id: 2,
-    username: "Tech official",
-    avatarPicture: "/default-avatar.png",
-    postContent: "Welcome to LA Tech tweddit!",
-    likeCount: 35,
-    commentCount: 8,
-  },
-  {
-    id: 3,
-    username: "Kyle Prather",
-    avatarPicture: "/druski.png",
-    postContent: "Look who finally got work done!",
-    likeCount: 67,
-    commentCount: 0,
   },
 ];
 
@@ -33,7 +22,7 @@ export default function FollowingPage() {
   const [sortBy, setSortBy] = useState("newest");
   const [filterBy, setFilterBy] = useState("all");
 
-  const filteredPosts = posts
+  const filteredPosts = followedPosts
     .filter((post) => {
       if (filterBy === "popular") return post.likeCount >= 100;
       if (filterBy === "comments") return post.commentCount > 0;
@@ -94,4 +83,5 @@ export default function FollowingPage() {
       <BottomNav />
     </>
   );
+
 }
