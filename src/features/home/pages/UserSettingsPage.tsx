@@ -16,11 +16,27 @@ import {
   AlertDialogAction,
 } from "@/shared/ui/alert-dialog";
 
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/shared/ui/dialog"
-import { Field, FieldGroup } from "@/shared/ui/field"
-import { Input } from "@/shared/ui/input"
-import { Label } from "@/shared/ui/label"
-import { getDisplayName, getHandle, getAvatar, updateDisplayName, updateHandle, updateAvatar } from "@/features/users/api/userFunctions";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/shared/ui/dialog";
+import { Field, FieldGroup } from "@/shared/ui/field";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import {
+  getDisplayName,
+  getHandle,
+  getAvatar,
+  updateDisplayName,
+  updateHandle,
+  updateAvatar,
+} from "../../auth/api/user/userFunctions.ts";
 {
   /* TODO:
     add functionality to buttons
@@ -31,8 +47,8 @@ import { getDisplayName, getHandle, getAvatar, updateDisplayName, updateHandle, 
 export default function UserSettingsPage() {
   const navigate = useNavigate();
 
-  const [ isSettingsOpen, setIsSettingsOpen ] = useState(false);
-  const [ errorMsg, setErrorMsg ] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   async function handleDeleteProfile() {
     const { data, error } = await supabase.rpc("delete_user");
@@ -51,23 +67,23 @@ export default function UserSettingsPage() {
   }
 
   // this function is used on form submit
-  async function handleProfileChange(event){
+  async function handleProfileChange(event) {
     event.preventDefault();
     // grab form object
     const form = event.currentTarget;
     const formdata = new FormData(form);
-    
+
     // grab data from objects inside form
     const newDisplayName = String(formdata.get("displayNameInput") ?? "");
     const newHandle = String(formdata.get("userHandleInput") ?? "");
 
     // use data to update profile
     // error checking
-    if (newDisplayName == "" || newHandle == ""){ 
+    if (newDisplayName == "" || newHandle == "") {
       setErrorMsg("Inputs cannot be empty");
       return;
     }
-      
+
     try {
       await updateDisplayName(newDisplayName);
       await updateHandle(newHandle);
@@ -101,43 +117,50 @@ export default function UserSettingsPage() {
         */}
 
         {/* Change user settings; start by setting vars on dialog open */}
-        <Dialog open = {isSettingsOpen} onOpenChange = {(onNextOpen) =>{
-          setIsSettingsOpen(onNextOpen);
-          if (onNextOpen) setErrorMsg(null);
-        }}>
+        <Dialog
+          open={isSettingsOpen}
+          onOpenChange={(onNextOpen) => {
+            setIsSettingsOpen(onNextOpen);
+            if (onNextOpen) setErrorMsg(null);
+          }}
+        >
           <DialogTrigger asChild>
-            <Button variant = "outline">Change User Settings</Button>
+            <Button variant="outline">Change User Settings</Button>
           </DialogTrigger>
 
-          <DialogContent className = "sm:max-w-sm">
-            <form className = "flex flex-col gap-4" onSubmit = {handleProfileChange}>
-
-              <DialogHeader className = "space-y-1 text-xl text-foreground">
+          <DialogContent className="sm:max-w-sm">
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={handleProfileChange}
+            >
+              <DialogHeader className="space-y-1 text-xl text-foreground">
                 <DialogTitle>Edit Profile</DialogTitle>
               </DialogHeader>
 
               <FieldGroup>
                 {/* display name field */}
-                  <Field>
-                    <Label>Display Name</Label>
-                    <Input id = "dn" name = "displayNameInput"/>
-                  </Field>
+                <Field>
+                  <Label>Display Name</Label>
+                  <Input id="dn" name="displayNameInput" />
+                </Field>
 
                 {/* user handle field */}
-                  <Field>
-                    <Label>User Handle</Label>
-                    <Input id = "h" name = "userHandleInput" />
-                  </Field>
+                <Field>
+                  <Label>User Handle</Label>
+                  <Input id="h" name="userHandleInput" />
+                </Field>
               </FieldGroup>
 
               {/* show error if needed */}
-              {errorMsg && (<p className = "mt-2 text-sm text-destructive"> {errorMsg} </p>)}
+              {errorMsg && (
+                <p className="mt-2 text-sm text-destructive"> {errorMsg} </p>
+              )}
 
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button variant = "outline">Cancel</Button>
+                  <Button variant="outline">Cancel</Button>
                 </DialogClose>
-                <Button type = "submit">Save</Button>
+                <Button type="submit">Save</Button>
               </DialogFooter>
             </form>
           </DialogContent>

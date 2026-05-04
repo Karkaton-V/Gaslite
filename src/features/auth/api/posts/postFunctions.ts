@@ -1,112 +1,158 @@
 import { supabase } from "@/shared/lib/supabase/client";
 
+/* ============================================================
+   TYPES
+============================================================ */
 
-// type block to help with data 
-// image is a string, because ideally it would point towards a storage location for the image
-type createPostInfo = {
-    content: string;
-    image?: string | null;
+export type CreatePostInfo = {
+  content: string;
+  image?: string | null;
+};
+
+export type LikePostInfo = {
+  postId: string;
+  userId: string;
+};
+
+/* ============================================================
+   CREATE POST
+============================================================ */
+
+export async function createPost(input: CreatePostInfo) {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) throw new Error("Must be logged in");
+
+  const postContent = input.content.trim();
+  if (!postContent) throw new Error("Post content cannot be empty");
+  if (postContent.length > 250)
+    throw new Error("Posts are limited to 250 characters");
+
+  const userId = authData.user.id;
+
+  const { data, error } = await supabase
+    .from("user_posts")
+    .insert({
+      user_id: userId,
+      content: postContent,
+      image: input.image ?? null,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
-type likePostInfo = {
-    postId: string,
-    userId: string
+/* ============================================================
+   DELETE POST
+============================================================ */
+
+export async function deletePost(postId: string) {
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData?.user) throw new Error("Must be logged in");
+
+  const userId = authData.user.id;
+
+  // Only delete posts owned by the user
+  const { error } = await supabase
+    .from("user_posts")
+    .delete()
+    .eq("id", postId)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+  return true;
 }
 
+/* ============================================================
+   LIKE POST
+============================================================ */
 
-// helper function to add posts to database
-export async function createPost(input: createPostInfo) {
+export async function likePost(postId: string) {
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData?.user) throw new Error("Must be logged in");
 
-    // grab auth data from supabase and check if logged in
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError || authData.user == null) throw new Error("Must be logged in");
+  const userId = authData.user.id;
 
-    // trim content and check for null to avoid shenanigans
-    const postContent = input.content.trim();
-    if (postContent == null || postContent == "") throw new Error("Post content cannot be empty!");
+  // Insert into likes table (you must have a likes table)
+  const { error } = await supabase.from("post_likes").insert({
+    post_id: postId,
+    user_id: userId,
+  });
 
-    // check post length
-    if (postContent.length > 250) throw new Error("Posts are limited to 250 characters");
+  if (error) throw error;
 
-    // grab user id
-    const userId = authData.user.id;
+  // Increment like_count
+  await supabase.rpc("increment_post_likes", { postid: postId });
 
-    // insert into db
-    const { data, error } = await supabase
-        .from('user_posts')
-        .insert({
-            user_id: userId,
-            content: postContent,
-            image: input.image ?? null,
-        })
-        .select()
-        .single();
-    
-    if (error) throw error;
-    return data;
+  return true;
 }
 
-export async function deletePost() {
-    /*
-        TODO:
-        This will function similarly to createPost()
-        It grabs user auth and post ID and removes the row from the db
-    */
+/* ============================================================
+   UNLIKE POST
+============================================================ */
+
+export async function unlikePost(postId: string) {
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData?.user) throw new Error("Must be logged in");
+
+  const userId = authData.user.id;
+
+  // Remove like row
+  const { error } = await supabase
+    .from("post_likes")
+    .delete()
+    .eq("post_id", postId)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+
+  // Decrement like_count
+  await supabase.rpc("decrement_post_likes", { postid: postId });
+
+  return true;
 }
 
-export async function likePost() {
+/* ============================================================
+   GET POSTS FROM A SPECIFIC USER
+============================================================ */
 
-    /*
-        TODO:
-        This function should grab auth data from supabase and verify
-        Then it grabs the user id and post id
-        Then it updates the liked posts table using the post ID and user ID
-        See createPost.ts for examples
-    */
+export async function getPostFromUser(userId: string) {
+  const { data, error } = await supabase
+    .from("user_posts")
+    .select("*, profiles(display_name, handle, profile_pic)")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data;
 }
 
+/* ============================================================
+   GET POSTS FROM FOLLOWED USERS
+============================================================ */
 
-export async function unlikePost() {
+export async function getPostFromFollowed(selfUserId: string) {
+  // 1. Get list of followed users
+  const { data: follows, error: followErr } = await supabase
+    .from("following")
+    .select("isFollowed")
+    .eq("isFollowing", selfUserId);
 
-    /*
-        TODO:
-        This function should behave similarly to likePost()
-        The difference is instead of adding a row to the table, it deletes the row
-        Must be very careful to delete only the correct row!
-    */
-}
+  if (followErr) throw followErr;
 
+  const followedIds = follows?.map((f) => f.isFollowed) ?? [];
 
-export async function getPostFromUser(handle: string) {
+  if (followedIds.length === 0) return [];
 
-    // grab auth data from supabase and check if logged in
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError || authData.user == null) throw new Error("Must be logged in");
+  // 2. Get posts from those users
+  const { data: posts, error: postErr } = await supabase
+    .from("user_posts")
+    .select("*, profiles(display_name, handle, profile_pic)")
+    .in("user_id", followedIds)
+    .order("created_at", { ascending: false });
 
-    const userId = handle;
+  if (postErr) throw postErr;
 
-    // query database for posts under the matching user id, limit results to the specified number
-    const { data, error } = await supabase
-        .from('user_posts')
-        .select('id')
-        .eq('user_id', userId);
-
-    if (error) throw error;
-    return data;
-
-}
-
-
-export async function getPostFromFollowed(handleSelf: string, handleFollowed: string) {
-
-    const { data, error } = await supabase.rpc("is_following", {
-        user1: handleSelf,
-        user2: handleFollowed
-    });
-    if (data) {
-        return getPostFromUser(handleFollowed);
-    }
-
-    if (error) throw error;
-
+  return posts;
 }
