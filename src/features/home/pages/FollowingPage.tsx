@@ -4,6 +4,7 @@ import { supabase } from "@/shared/lib/supabase/client";
 import { getPostFromFollowed } from "../../auth/api/posts/postFunctions";
 import BottomNav from "@/shared/ui/BottomNav";
 import { Post } from "@/shared/ui/post";
+import { PostDialog } from "@/shared/ui/post-dialog";
 
 export default function FollowingPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -90,6 +91,8 @@ export default function FollowingPage() {
             <option value="popular">Filter: Popular posts</option>
             <option value="comments">Filter: Has comments</option>
           </select>
+
+          <PostDialog />
         </div>
 
         {/* Loading */}

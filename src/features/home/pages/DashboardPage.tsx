@@ -30,7 +30,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <PostDialog />
           <Button variant="outline" onClick={() => navigate("/messages")}>
             Messages
           </Button>
