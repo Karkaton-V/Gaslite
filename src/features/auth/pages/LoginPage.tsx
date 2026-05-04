@@ -5,6 +5,7 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Card } from "@/shared/ui/card";
 import { Label } from "@/shared/ui/label";
+import { loginUser } from "../api/user/userFunctions";
 
 export default function LoginPage() {
   // React Router navigation hook
@@ -21,10 +22,7 @@ export default function LoginPage() {
     setError(""); // Clear previous errors
 
     // Supabase password-based login
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await loginUser(email, password);
 
     // If Supabase returns an error, show it to the user
     if (error) {
@@ -71,7 +69,7 @@ export default function LoginPage() {
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
           {/* Submit button */}
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full bg-green-600">
             Sign In
           </Button>
         </form>
@@ -81,6 +79,14 @@ export default function LoginPage() {
           Don’t have an account?{" "}
           <Link to="/register" className="text-blue-600 hover:underline">
             Register
+          </Link>
+        </p>
+
+        {/* Link to forgot password page */}
+        <p className="text-center text-sm">
+          Forgot Password?{" "}
+          <Link to="/passwordreset" className="text-blue-600 hover:underline">
+            Reset Password
           </Link>
         </p>
       </Card>
