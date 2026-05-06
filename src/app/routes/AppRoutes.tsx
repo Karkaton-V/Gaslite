@@ -11,6 +11,7 @@ import CreateCommunityPage from "@/features/home/pages/CreateCommunityPage";
 import SingleCommunityPage from "@/features/home/pages/SingleCommunityPage";
 import ProfilePage from "@/features/home/pages/ProfilePage";
 import UserSettingsPage from "@/features/home/pages/UserSettingsPage";
+import ConversationsPage from "@/features/home/pages/ConversationsPage";
 import MessagesPage from "@/features/home/pages/MessagesPage";
 
 import { useProtectedRoute } from "@/shared/hooks/useProtectedRoute";
@@ -40,7 +41,16 @@ export default function AppRoutes() {
         />
 
         <Route
-          path="/messages"
+          path="/conversations"
+          element={
+            <Protected>
+              <ConversationsPage />
+            </Protected>
+          }
+        />
+
+        <Route
+          path="/conversation/:id"
           element={
             <Protected>
               <MessagesPage />
