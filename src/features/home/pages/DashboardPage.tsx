@@ -30,7 +30,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => navigate("/messages")}>
+          <Button variant="outline" onClick={() => navigate("/conversations")}>
             Messages
           </Button>
 
