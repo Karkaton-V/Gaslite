@@ -2,7 +2,7 @@ import { ButtonGroup, ButtonGroupSeparator } from "@/shared/ui/button-group";
 import { Button } from "@/shared/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar";
 import { useNavigate } from "react-router-dom";
-import  BottomNav  from "@/shared/ui/BottomNav"
+import BottomNav  from "@/shared/ui/BottomNav"
 
 type Conversation = {
   id: string,
