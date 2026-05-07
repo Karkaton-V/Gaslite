@@ -85,7 +85,7 @@ export default function ConversationsPage() {
                   type="button"
                   variant="outline"
                   className="h-auto min-h-[4.5rem] min-w-0 flex-1 items-center justify-start gap-3 px-4 py-3 text-left text-sm font-normal whitespace-normal hover:bg-muted/60"
-                  onClick={() => navigate(`/conversation/${conversation.id}?with=${encodeURIComponent(conversation.user1)}`)}
+                  //onClick={() => navigate(`/conversation/${conversation.id}?with=${encodeURIComponent(conversation.user1)}`)}
                 >
                   <Avatar size="default" className="shrink-0">
                     <AvatarImage src={conversation.avatarPicture} />
