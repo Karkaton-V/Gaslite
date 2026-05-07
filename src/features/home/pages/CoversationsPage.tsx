@@ -16,7 +16,16 @@ type Conversation = {
 
 const dummyConversations: Conversation[] = [
   {
-    id: "00000000-0000-0000-0000-000000000001",
+    id: "1dabb9f4-5c77-49e8-9634-4b02d2a4de54",
+    user1: "niko",
+    user2: "you",
+    avatarPicture: "./assets/default.png",
+    lastMessage: "Hey, man, this is Jalen trying to test the messages page",
+    updatedAt: "2min ago",
+    unreadCount: 1,
+  },
+  {
+    id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx1",
     user1: "alyx",
     user2: "you",
     avatarPicture: "./assets/druski.png",
@@ -25,7 +34,7 @@ const dummyConversations: Conversation[] = [
     unreadCount: 2,
   },
   {
-    id: "00000000-0000-0000-0000-000000000002",
+    id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx2",
     user1: "karkaton",
     user2: "you",
     avatarPicture: "./assets/default.png",
@@ -34,7 +43,7 @@ const dummyConversations: Conversation[] = [
     unreadCount: 0,
   },
   {
-    id: "00000000-0000-0000-0000-000000000003",
+    id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx3",
     user1: "Followed User",
     user2: "you",
     avatarPicture: "./assets/default.png",
@@ -43,22 +52,13 @@ const dummyConversations: Conversation[] = [
     unreadCount: 1,
   },
   {
-    id: "00000000-0000-0000-0000-000000000004",
+    id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx4",
     user1: "Dev Team",
     user2: "you",
     avatarPicture: "./assets/default.png",
     lastMessage: "Next, gotta link this page to the DB. But I also wanna see what happens if you just have a really long message. I think what's going to happen is that the button will be extremely stretched. And so the next step would be to essentially cut off part of the message and replace it with elipses. That's all I've got for now, thanks for sticking with me up to this point. jalen out. Ok so I just tested this out and it already does all that stuff I just mentioned, so that's awesome.",
     updatedAt: "Yesterday",
     unreadCount: 0,
-  },
-  {
-    id: "1dabb9f4-5c77-49e8-9634-4b02d2a4de54",
-    user1: "niko",
-    user2: "you",
-    avatarPicture: "./assets/default.png",
-    lastMessage: "Hey, man, this is Jalen trying to test the messages page",
-    updatedAt: "2min ago",
-    unreadCount: 1,
   },
 ];
 
