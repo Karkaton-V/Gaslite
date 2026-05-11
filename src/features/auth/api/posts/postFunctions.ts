@@ -77,7 +77,7 @@ export async function likePost(postId: string) {
   // Insert into likes table (you must have a likes table)
   const { error } = await supabase.from("post_likes").insert({
     post_id: postId,
-    user_id: userId,
+    liked_by: userId,
   });
 
   if (error) throw error;
@@ -103,7 +103,7 @@ export async function unlikePost(postId: string) {
     .from("post_likes")
     .delete()
     .eq("post_id", postId)
-    .eq("user_id", userId);
+    .eq("liked_by", userId);
 
   if (error) throw error;
 
@@ -111,6 +111,56 @@ export async function unlikePost(postId: string) {
   await supabase.rpc("decrement_post_likes", { postid: postId });
 
   return true;
+}
+
+/* ============================================================
+   GET LIKES ON A POST
+============================================================ */
+export async function getLikeCount(postId: string) {
+  // no auth required!
+
+  const { count, error } = await supabase
+    .from("post_likes")
+    .select("*", { count: "exact", head: true })
+    .eq("post_id", postId);
+
+  if (error) throw error;
+
+  // potential for count to be null; in that case, return 0
+  return count ?? 0;
+}
+
+/* ============================================================
+   GET POSTS LIKED BY USER
+============================================================ */
+// can be used in profile page
+export async function getPostsLikedByUser(userId: string) {
+  const { data, error } = await supabase
+    .from("post_likes")
+    .select("post_id")
+    .eq("liked_by", userId);
+
+  if (error) throw error;
+  // in this case, "data" is an array of post IDs
+  return data;
+}
+
+/* ============================================================
+   GET POSTS LIKED BY SELF
+============================================================ */
+export async function getPostsLikedBySelf() {
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData?.user) throw new Error("Must be logged in");
+
+  const userId = authData.user.id;
+
+  const { data, error } = await supabase
+    .from("post_likes")
+    .select("post_id")
+    .eq("liked_by", userId);
+
+  if (error) throw error;
+  return data;
 }
 
 /* ============================================================
