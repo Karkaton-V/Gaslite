@@ -6,6 +6,7 @@ import PasswordResetPage from "@/features/auth/pages/PasswordResetPage";
 
 import DashboardPage from "@/features/home/pages/DashboardPage";
 import FollowingPage from "@/features/home/pages/FollowingPage";
+import SinglePostPage from "@/features/home/pages/SinglePostPage";
 import CommunitiesDirectoryPage from "@/features/home/pages/CommunitiesDirectoryPage";
 import CreateCommunityPage from "@/features/home/pages/CreateCommunityPage";
 import SingleCommunityPage from "@/features/home/pages/SingleCommunityPage";
@@ -72,6 +73,16 @@ export default function AppRoutes() {
           element={
             <Protected>
               <FollowingPage />
+            </Protected>
+          }
+        />
+
+        {/* Single Post Page */}
+        <Route
+          path="/post/:id"
+          element={
+            <Protected>
+              <SinglePostPage />
             </Protected>
           }
         />

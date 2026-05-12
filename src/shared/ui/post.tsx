@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardTitle, CardContent, CardFooter } from "@/shared/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
@@ -40,6 +41,8 @@ export function Post({
   const [isLiked, setIsLiked] = useState(initialIsLiked ?? false);
   const [displayCount, setDisplayCount] = useState<number | null>(null);
   const likeText = "Like" + (isLiked ? "d" : "");
+  const navigate = useNavigate();
+  const { id } = useParams();
 
   // useEffect to load post likes
   // [postId] tells it to load based on the given postId to the object
@@ -128,7 +131,12 @@ export function Post({
               {likeText} {displayCount}
             </Toggle>
 
-            <Button variant="default">Comment {commentCount}</Button>
+            <Button
+              variant="default"
+              onClick={() => navigate(`/post/${postId}`)}
+            >
+              Comment {commentCount}
+            </Button>
           </div>
         </CardFooter>
       </Card>

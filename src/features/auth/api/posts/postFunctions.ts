@@ -65,6 +65,25 @@ export async function deletePost(postId: string) {
 }
 
 /* ============================================================
+   GRAB POST GIVEN UUID
+============================================================ */
+export async function getPost(postId: string) {
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData?.user) throw new Error("Must be logged in");
+
+  const userId = authData.user.id;
+
+  const { data, error } = await supabase
+    .from("user_posts")
+    .select("*, profiles(display_name, handle, profile_pic)")
+    .eq("id", postId)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/* ============================================================
    LIKE POST
 ============================================================ */
 
