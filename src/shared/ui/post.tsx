@@ -10,7 +10,6 @@ import { HeartIcon } from "@phosphor-icons/react";
 import {
   likePost,
   unlikePost,
-  getPostsLikedBySelf,
   getLikeCount,
 } from "@/features/auth/api/posts/postFunctions";
 
@@ -23,6 +22,7 @@ type PostProps = {
   initialIsLiked?: boolean;
   commentCount: number;
   avatarPicture: string;
+  timePosted: string;
   postId: string;
 };
 
@@ -33,6 +33,7 @@ export function Post({
   initialIsLiked,
   commentCount,
   avatarPicture,
+  timePosted,
   postId,
   className,
   ...props

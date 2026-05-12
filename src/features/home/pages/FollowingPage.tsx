@@ -130,6 +130,7 @@ export default function FollowingPage() {
               key={post.id}
               postId={post.id}
               username={post.profiles.display_name}
+              timePosted={post.created_at}
               avatarPicture={post.profiles.profile_pic}
               initialIsLiked={likedPostsArray.includes(post.id)}
               postContent={post.content}
