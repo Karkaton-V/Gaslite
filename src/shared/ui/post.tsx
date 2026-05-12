@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardTitle, CardContent, CardFooter } from "@/shared/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
@@ -6,28 +6,76 @@ import { Toggle } from "@/shared/ui/toggle";
 import { Separator } from "@/shared/ui/separator";
 import { cn } from "@/shared/lib/utils/index";
 import { HeartIcon } from "@phosphor-icons/react";
+import {
+  likePost,
+  unlikePost,
+  getPostsLikedBySelf,
+  getLikeCount,
+} from "@/features/auth/api/posts/postFunctions";
 
+// initialIsLiked is used to keep track of whether or not you have already liked the post
+// in pages that use the post component, this will be passed as a property
 type PostProps = {
   username: string;
   postContent: string;
   likeCount: number;
+  initialIsLiked?: boolean;
   commentCount: number;
   avatarPicture: string;
+  postId: string;
 };
 
 export function Post({
   username,
   postContent,
   likeCount,
+  initialIsLiked,
   commentCount,
   avatarPicture,
+  postId,
   className,
   ...props
 }: PostProps & React.ComponentProps<"div">) {
-  const [isLiked, setIsLiked] = useState(false);
-
-  const displayCount = likeCount + (isLiked ? 1 : 0);
+  // default to false if initialIsLiked doesn't exist
+  const [isLiked, setIsLiked] = useState(initialIsLiked ?? false);
+  const [displayCount, setDisplayCount] = useState<number | null>(null);
   const likeText = "Like" + (isLiked ? "d" : "");
+
+  // useEffect to load post likes
+  // [postId] tells it to load based on the given postId to the object
+  useEffect(() => {
+    setIsLiked(initialIsLiked);
+    // async arrow function allows usage of async functions
+    (async () => {
+      try {
+        const likes = await getLikeCount(postId);
+        setDisplayCount(likes);
+      } catch {
+        setDisplayCount(0);
+      }
+    })();
+  }, [postId, initialIsLiked]);
+
+  async function toggleLike(postId: string, isPressed: boolean) {
+    // updates post likes in database
+    // this function is triggered upon button toggle
+
+    const nextState = !isLiked;
+    setIsLiked(nextState); // update state
+
+    // perform database action(s)
+    try {
+      if (isPressed) {
+        await likePost(postId);
+        setDisplayCount(displayCount + 1);
+      } else {
+        await unlikePost(postId);
+        setDisplayCount(displayCount - 1);
+      }
+    } catch {
+      setIsLiked(!isPressed);
+    }
+  }
 
   // --- SAFE AVATAR LOGIC ---
   // Ensures no relative paths ever break the UI.
@@ -69,7 +117,9 @@ export function Post({
             <Toggle
               variant="outline"
               pressed={isLiked}
-              onPressedChange={setIsLiked}
+              onPressedChange={(pressed) => {
+                void toggleLike(postId, pressed);
+              }}
             >
               <HeartIcon
                 weight={isLiked ? "fill" : "regular"}

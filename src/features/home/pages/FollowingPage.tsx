@@ -6,12 +6,19 @@ import BottomNav from "@/shared/ui/BottomNav";
 import { Post } from "@/shared/ui/post";
 import { PostDialog } from "@/shared/ui/post-dialog";
 
+import { getPostsLikedBySelf } from "@/features/auth/api/posts/postFunctions";
+
 export default function FollowingPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [sortBy, setSortBy] = useState("newest");
   const [filterBy, setFilterBy] = useState("all");
+
+  // set var for like handling
+  // use an array of strings
+  // each string in array is a post UUID
+  const [likedPostsArray, setLikedPostsArray] = useState<string[]>([]);
 
   /**
    * Load feed:
@@ -32,10 +39,16 @@ export default function FollowingPage() {
 
       const userId = authData.user.id;
 
-      // 2. Get posts from followed users
+      // 2. Get posts from followed users, and get posts liked by self
       const followedPosts = await getPostFromFollowed(userId);
+      const likedPosts = await getPostsLikedBySelf();
 
       setPosts(followedPosts || []);
+
+      // map function to go through array, item by item, and update likedPostsArray
+      // if there's a problem, default to empty array
+      setLikedPostsArray((likedPosts ?? []).map((post) => post.post_id));
+
       setLoading(false);
     }
 
@@ -115,8 +128,10 @@ export default function FollowingPage() {
           {filteredPosts.map((post) => (
             <Post
               key={post.id}
+              postId={post.id}
               username={post.profiles.display_name}
               avatarPicture={post.profiles.profile_pic}
+              initialIsLiked={likedPostsArray.includes(post.id)}
               postContent={post.content}
               likeCount={post.like_count}
               commentCount={post.comment_count}
