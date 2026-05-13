@@ -7,6 +7,7 @@ import {
 } from "@/features/auth/api/posts/postFunctions";
 
 import { Post } from "@/shared/ui/post";
+import BottomNav from "@/shared/ui/BottomNav";
 
 export default function SinglePostPage() {
   const { id } = useParams();
@@ -59,6 +60,8 @@ export default function SinglePostPage() {
         communityName={post.communities?.name}
         communityPicture={post.communities?.picture}
       />
+
+      <BottomNav />
     </div>
   );
 }
