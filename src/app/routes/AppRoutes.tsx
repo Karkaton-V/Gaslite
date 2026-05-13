@@ -68,8 +68,9 @@ export default function AppRoutes() {
           }
         />
 
+        {/* Following feed (was /recommended) */}
         <Route
-          path="/recommended"
+          path="/following"
           element={
             <Protected>
               <FollowingPage />
@@ -77,7 +78,7 @@ export default function AppRoutes() {
           }
         />
 
-        {/* Single Post Page */}
+        {/* Single Post */}
         <Route
           path="/post/:id"
           element={
@@ -117,6 +118,7 @@ export default function AppRoutes() {
           }
         />
 
+        {/* Profile */}
         <Route
           path="/profile"
           element={

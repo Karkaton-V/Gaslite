@@ -18,18 +18,25 @@ type Conversation = {
 export default function ConversationsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    // If user is not loaded yet, stop early
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    // Narrow user safely
+    const userId = user.id;
 
     async function fetchConversations() {
-      // fetches messages that the current user is a part of
       const { data: msgs, error } = await supabase
         .from("messages")
         .select("conversation_id, sender, receiver, content, created_at")
-        .or(`sender.eq.${user!.id},receiver.eq.${user!.id}`)
+        .or(`sender.eq.${userId},receiver.eq.${userId}`)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -38,31 +45,29 @@ export default function ConversationsPage() {
         return;
       }
 
-      // returns the last message from each unique conversationID
+      // Deduplicate by conversation_id (keep latest)
       const seen = new Set<string>();
-      const latest = (msgs ?? []).filter((message) => {
-        if (seen.has(message.conversation_id)) return false;
-        seen.add(message.conversation_id);
+      const latest = (msgs ?? []).filter((m) => {
+        if (seen.has(m.conversation_id)) return false;
+        seen.add(m.conversation_id);
         return true;
       });
 
-      // creates a list of partners' IDs for each conversation
-      const partnerIds: string[] = [];
-      for (const message of latest) {
-        const partnerId = message.sender === user!.id ? message.receiver : message.sender;
-        if (partnerId) partnerIds.push(partnerId);
-      }
+      // Collect partner IDs
+      const partnerIds = latest.map((m) =>
+        m.sender === userId ? m.receiver : m.sender,
+      );
 
-      // searches profiles tables where id = partnerIds to fetch their related info
+      // Fetch partner profiles
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id, handle, display_name, profile_pic")
         .in("id", partnerIds);
 
-      // builds the final conversation list by combining message data with profile data
-      const convList: Conversation[] = latest.map((message) => {
-        const partnerId = message.sender === user!.id ? message.receiver : message.sender;
-        const profile = (profiles ?? []).find((profile) => profile.id === partnerId);
+      // Build final conversation list
+      const convList: Conversation[] = latest.map((m) => {
+        const partnerId = m.sender === userId ? m.receiver : m.sender;
+        const profile = profiles?.find((p) => p.id === partnerId);
 
         let avatarUrl: string | null = null;
         if (profile?.profile_pic) {
@@ -73,11 +78,11 @@ export default function ConversationsPage() {
         }
 
         return {
-          id: message.conversation_id,
+          id: m.conversation_id,
           handle: profile?.handle ?? "Unknown",
           displayName: profile?.display_name ?? "Unknown",
           avatar: avatarUrl,
-          lastMessage: message.content,
+          lastMessage: m.content,
         };
       });
 
@@ -94,31 +99,29 @@ export default function ConversationsPage() {
         <div className="mx-auto w-full max-w-2xl">
           <h1 className="text-3xl font-semibold">Messages</h1>
 
-          {loading && (
-            <p className="mt-6 text-muted-foreground">Loading...</p>
-          )}
+          {loading && <p className="mt-6 text-muted-foreground">Loading...</p>}
 
           {!loading && conversations.length === 0 && (
             <p className="mt-6 text-muted-foreground">No conversations yet.</p>
           )}
 
-          <ul
-            role="list"
-            className="m-0 mt-6 grid w-full list-none grid-cols-1 gap-3 p-0 pl-0"
-          >
+          <ul className="m-0 mt-6 grid w-full list-none grid-cols-1 gap-3 p-0">
             {conversations.map((conv) => (
-              <li key={conv.id} className="min-w-0 list-none pl-0">
+              <li key={conv.id} className="min-w-0 list-none">
                 <ButtonGroup
                   orientation="horizontal"
                   className="w-full overflow-hidden rounded-xl border border-border bg-card shadow-sm"
                 >
+                  {/* Main conversation button */}
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-auto min-h-[4.5rem] min-w-0 flex-1 items-center justify-start gap-3 px-4 py-3 text-left text-sm font-normal whitespace-normal hover:bg-muted/60"
+                    className="h-auto min-h-[4.5rem] flex-1 items-center justify-start gap-3 px-4 py-3 text-left text-sm font-normal hover:bg-muted/60"
                     onClick={() =>
                       navigate(
-                        `/conversation/${conv.id}?with=${encodeURIComponent(conv.displayName)}`
+                        `/conversation/${conv.id}?with=${encodeURIComponent(
+                          conv.displayName,
+                        )}`,
                       )
                     }
                   >
@@ -128,6 +131,7 @@ export default function ConversationsPage() {
                         {conv.displayName[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
+
                     <div className="flex min-w-0 flex-col gap-1">
                       <span className="w-full text-base font-semibold">
                         {conv.displayName}
@@ -140,18 +144,19 @@ export default function ConversationsPage() {
 
                   <ButtonGroupSeparator orientation="vertical" />
 
+                  {/* Right-side placeholder button (future actions) */}
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-auto min-h-[4.5rem] min-w-[5rem] shrink-0 flex-col items-end justify-center gap-2 bg-muted/40 px-4 py-3 font-normal whitespace-normal hover:bg-muted/60"
-                  >
-                  </Button>
+                    className="h-auto min-h-[4.5rem] min-w-[5rem] shrink-0 flex-col items-end justify-center gap-2 bg-muted/40 px-4 py-3 font-normal hover:bg-muted/60"
+                  />
                 </ButtonGroup>
               </li>
             ))}
           </ul>
         </div>
       </div>
+
       <BottomNav />
     </>
   );

@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { Button } from "@/shared/ui/button";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import BottomNav from "@/shared/ui/BottomNav";
+import { Button } from "@/shared/ui/button";
 import { supabase } from "@/shared/lib/supabase/client";
-// ShadCN AlertDialog components
+
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -20,29 +21,22 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/shared/ui/dialog";
+
 import { Field, FieldGroup } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
+
 import {
   getDisplayName,
   getHandle,
-  getAvatar,
   updateDisplayName,
   updateHandle,
-  updateAvatar,
-} from "../../auth/api/user/userFunctions.ts";
-{
-  /* TODO:
-    add functionality to buttons
-    fix styling
-    */
-}
+} from "@/features/auth/api/user/userFunctions";
 
 export default function UserSettingsPage() {
   const navigate = useNavigate();
@@ -50,36 +44,48 @@ export default function UserSettingsPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const [displayName, setDisplayName] = useState("");
+  const [handle, setHandle] = useState("");
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const [disp, hand] = await Promise.all([getDisplayName(), getHandle()]);
+        setDisplayName(disp ?? "");
+        setHandle(hand ?? "");
+      } catch (err: any) {
+        setErrorMsg(err.message ?? "Failed to load profile");
+      }
+    }
+
+    loadProfile();
+  }, []);
+
   async function handleDeleteProfile() {
-    const { data, error } = await supabase.rpc("delete_user");
+    const { error } = await supabase.rpc("delete_user");
 
-    console.log("RPC data:", data);
-    console.error("RPC error:", error);
-
-    // const { error } = await supabase.rpc("delete_user");
-
-    // if (error) {
-    //   console.error("Error deleting profile:", error);
-    //   return;
-    // }
+    if (error) {
+      console.error("Error deleting profile:", error);
+      setErrorMsg("Failed to delete profile. Please try again.");
+      return;
+    }
 
     navigate("/register");
   }
 
-  // this function is used on form submit
   async function handleProfileChange(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // grab form object
+    setErrorMsg(null);
+
     const form = event.currentTarget;
     const formdata = new FormData(form);
 
-    // grab data from objects inside form
-    const newDisplayName = String(formdata.get("displayNameInput") ?? "");
-    const newHandle = String(formdata.get("userHandleInput") ?? "");
+    const newDisplayName = String(
+      formdata.get("displayNameInput") ?? "",
+    ).trim();
+    const newHandle = String(formdata.get("userHandleInput") ?? "").trim();
 
-    // use data to update profile
-    // error checking
-    if (newDisplayName == "" || newHandle == "") {
+    if (!newDisplayName || !newHandle) {
       setErrorMsg("Inputs cannot be empty");
       return;
     }
@@ -87,6 +93,8 @@ export default function UserSettingsPage() {
     try {
       await updateDisplayName(newDisplayName);
       await updateHandle(newHandle);
+      setDisplayName(newDisplayName);
+      setHandle(newHandle);
       setIsSettingsOpen(false);
     } catch (error: any) {
       setErrorMsg(error.message ?? "Failed to update settings");
@@ -95,28 +103,19 @@ export default function UserSettingsPage() {
 
   return (
     <>
-      {/* header section*/}
+      {/* Header */}
       <div className="p-6 flex items-center justify-between">
-        {/* on the left: page title */}
         <div>
           <h1 className="text-3xl font-semibold">User Settings</h1>
           <p className="mt-2 text-muted-foreground">
-            Settings page coming soon.
+            Manage your profile and account.
           </p>
         </div>
       </div>
 
-      {/* "main" section */}
+      {/* Main */}
       <div className="flex flex-col min-h-screen bg-background items-center p-8 pb-24 text-foreground gap-4">
-        {/* build dialogs for each of these buttons */}
-        {/*}
-        <Button variant="outline">Change User Handle</Button>
-        <Button variant="outline">Change Display Name</Button>
-        <Button variant="outline">Change Avatar</Button>
-        <Button variant="outline">Change Password</Button>
-        */}
-
-        {/* Change user settings; start by setting vars on dialog open */}
+        {/* Edit profile dialog */}
         <Dialog
           open={isSettingsOpen}
           onOpenChange={(onNextOpen) => {
@@ -138,22 +137,29 @@ export default function UserSettingsPage() {
               </DialogHeader>
 
               <FieldGroup>
-                {/* display name field */}
                 <Field>
-                  <Label>Display Name</Label>
-                  <Input id="dn" name="displayNameInput" />
+                  <Label htmlFor="displayNameInput">Display Name</Label>
+                  <Input
+                    id="displayNameInput"
+                    name="displayNameInput"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                  />
                 </Field>
 
-                {/* user handle field */}
                 <Field>
-                  <Label>User Handle</Label>
-                  <Input id="h" name="userHandleInput" />
+                  <Label htmlFor="userHandleInput">User Handle</Label>
+                  <Input
+                    id="userHandleInput"
+                    name="userHandleInput"
+                    value={handle}
+                    onChange={(e) => setHandle(e.target.value)}
+                  />
                 </Field>
               </FieldGroup>
 
-              {/* show error if needed */}
               {errorMsg && (
-                <p className="mt-2 text-sm text-destructive"> {errorMsg} </p>
+                <p className="mt-2 text-sm text-destructive">{errorMsg}</p>
               )}
 
               <DialogFooter>
@@ -166,12 +172,12 @@ export default function UserSettingsPage() {
           </DialogContent>
         </Dialog>
 
-        {/*Delete Profile With Confirmation */}
+        {/* Delete profile with confirmation */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
               variant="destructive"
-              className=" bg-red-600  text-foreground "
+              className="bg-red-600 text-foreground hover:bg-red-700"
             >
               DELETE PROFILE
             </Button>
@@ -187,7 +193,7 @@ export default function UserSettingsPage() {
             </AlertDialogHeader>
 
             <AlertDialogFooter>
-              <AlertDialogCancel className="bg-green-600">
+              <AlertDialogCancel className="bg-green-600 hover:bg-green-700">
                 Cancel
               </AlertDialogCancel>
 
@@ -202,7 +208,6 @@ export default function UserSettingsPage() {
         </AlertDialog>
       </div>
 
-      {/* bottom nav bar */}
       <BottomNav />
     </>
   );

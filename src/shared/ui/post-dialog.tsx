@@ -9,93 +9,67 @@ import {
   DialogTrigger,
 } from "@/shared/ui/dialog";
 import { Textarea } from "@/shared/ui/textarea";
-import { createPost } from "@/features/auth/api/posts/postFunctions";
 
-// using the shadcn dialog page for help
+import { createCommunityPost } from "@/features/auth/api/posts/postFunctions";
 
-export function PostDialog() {
-  // vars to help submit data to db and to close dialog after post is sent
-  // var isPosting and errorMsg used to help indicate status to user
+export function PostDialog({ communityId }: { communityId: string }) {
   const [postText, setPostText] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    try {
+      setIsPosting(true);
+
+      await createCommunityPost(communityId, postText);
+
+      // Notify feed pages
+      window.dispatchEvent(new CustomEvent("post_created"));
+
+      setPostText("");
+      setIsDialogOpen(false);
+    } catch (error: any) {
+      setErrorMsg(error.message ?? "Failed to post");
+    } finally {
+      setIsPosting(false);
+    }
+  }
+
   return (
-    // set errorsmg to null when dialog box opens
     <Dialog
       open={isDialogOpen}
-      onOpenChange={(onNextOpen) => {
-        setIsDialogOpen(onNextOpen);
-        if (onNextOpen) setErrorMsg(null);
+      onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (open) setErrorMsg(null);
       }}
     >
-      {/* DialogTrigger determines what actually opens the dialog
-    return (
-
-        // set errorsmg to null when dialog box opens
-        <Dialog open = {isDialogOpen}
-            onOpenChange = {(onNextOpen) => {
-                setIsDialogOpen(onNextOpen);
-                if (onNextOpen) setErrorMsg(null);
-            }}>
-            {/* DialogTrigger determines what actually opens the dialog
-            in this case, it's a button */}
       <DialogTrigger asChild>
         <Button>New Post</Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-2xl min-h-[30vh] overflow-y-auto">
-        <form
-          className="space-y-4"
-          /* marking as form designates that data will be stored/sent
-                            onSubmit: triggers when components within form are closed
-                            onSubmit will prevent browser refresh and handle sending data to db*/
-          onSubmit={async (event) => {
-            event.preventDefault();
-            setErrorMsg(null);
-            /*
-                            try/catch/finally block to trigger functions properly
-                            */
-            try {
-              setIsPosting(true);
-              await createPost({
-                content: postText,
-              });
-              // send event, used for page updating
-              window.dispatchEvent(new CustomEvent("post_created"));
-              setPostText("");
-              setIsDialogOpen(false);
-            } catch (error: any) {
-              setErrorMsg(error.message ?? "Failed to post");
-            } finally {
-              setIsPosting(false);
-            }
-          }}
-        >
+        <form onSubmit={handleSubmit} className="space-y-4">
           <DialogHeader className="space-y-1 text-xl text-foreground">
             <DialogTitle>New Post</DialogTitle>
           </DialogHeader>
 
           <Textarea
-            /* placeholder: text that shows on empty textbox
-                                value: used to store user text input
-                                onChange: uses event handling to update value */
-            placeholder="Gaslite us!"
+            placeholder="Share something with the community…"
             value={postText}
-            onChange={(event) => setPostText(event.target.value)}
+            onChange={(e) => setPostText(e.target.value)}
             className="min-h-40"
           />
 
-          {/* "wrapping" the errorMsg in the below statement allows for conditional rendering */}
-
           {errorMsg && (
-            <p className="mt-2 text-sm text-destructive"> {errorMsg} </p>
+            <p className="mt-2 text-sm text-destructive">{errorMsg}</p>
           )}
 
           <DialogFooter>
             <div className="flex justify-end pt-1">
-              {/* button type "submit" tells it to submit the form */}
               <Button type="submit" disabled={isPosting} size="lg">
                 {isPosting ? "Posting..." : "Send Post"}
               </Button>

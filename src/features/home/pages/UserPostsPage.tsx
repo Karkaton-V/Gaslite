@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/shared/lib/supabase/client";
-import { getPostFromFollowed } from "@/features/auth/api/posts/postFunctions";
+
+import {
+  getFeedForUser,
+  getPostsLikedBySelf,
+} from "@/features/auth/api/posts/postFunctions";
 import { Post } from "@/shared/ui/post";
 import BottomNav from "@/shared/ui/BottomNav";
 
 export default function UserPostsPage() {
   const [posts, setPosts] = useState<any[]>([]);
+  const [likedPostsArray, setLikedPostsArray] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,16 +19,23 @@ export default function UserPostsPage() {
 
       // 1. Get current user
       const { data: authData } = await supabase.auth.getUser();
-      if (!authData?.user) {
+      const user = authData?.user;
+
+      if (!user) {
         setPosts([]);
+        setLikedPostsArray([]);
         setLoading(false);
         return;
       }
 
-      const userId = authData.user.id;
+      const userId = user.id;
 
-      // 2. Get posts from followed users
-      const followedPosts = await getPostFromFollowed(userId);
+      // 2. Get posts from followed users (NEW)
+      const followedPosts = await getFeedForUser(userId);
+
+      // 3. Get posts liked by self
+      const likedPosts = await getPostsLikedBySelf();
+      setLikedPostsArray((likedPosts ?? []).map((p) => p.post_id));
 
       setPosts(followedPosts || []);
       setLoading(false);
@@ -53,11 +65,16 @@ export default function UserPostsPage() {
         {posts.map((post) => (
           <Post
             key={post.id}
+            postId={post.id}
+            source="user"
+            communityId={null}
             username={post.profiles.display_name}
             avatarPicture={post.profiles.profile_pic}
+            timePosted={post.created_at}
             postContent={post.content}
             likeCount={post.like_count}
             commentCount={post.comment_count}
+            initialIsLiked={likedPostsArray.includes(post.id)}
           />
         ))}
       </div>

@@ -19,36 +19,50 @@ export default function MessagesPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const partnerName = searchParams.get("with");
+
   const navigate = useNavigate();
   const { user } = useAuth();
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [receiverId, setReceiverId] = useState<string | null>(null);
+
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * Load messages + receiver ID + subscribe to realtime updates
+   */
   useEffect(() => {
-    supabase
-      .from("messages")
-      .select("*")
-      .eq("conversation_id", id)
-      .order("created_at", { ascending: true })
-      .then(({ data, error }) => {
-        if (error) console.error("fetch messages error:", error);
-        if (data) setMessages(data);
-      });
+    if (!id) return;
 
-    if (partnerName) {
-      supabase
+    async function loadMessages() {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", id)
+        .order("created_at", { ascending: true });
+
+      if (error) console.error("fetch messages error:", error);
+      if (data) setMessages(data);
+    }
+
+    async function loadReceiver() {
+      if (!partnerName) return;
+
+      const { data, error } = await supabase
         .from("profiles")
         .select("id")
         .eq("display_name", partnerName)
-        .single()
-        .then(({ data, error }) => {
-          if (error) console.error("fetch receiver error:", error);
-          if (data) setReceiverId(data.id);
-        });
+        .single();
+
+      if (error) console.error("fetch receiver error:", error);
+      if (data) setReceiverId(data.id);
     }
 
+    loadMessages();
+    loadReceiver();
+
+    // Realtime subscription
     const channel = supabase
       .channel(`messages:${id}`)
       .on(
@@ -59,8 +73,8 @@ export default function MessagesPage() {
           table: "messages",
           filter: `conversation_id=eq.${id}`,
         },
-        (newInsertion) => {
-          setMessages((prev) => [...prev, newInsertion.new as Message]);
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new as Message]);
         },
       )
       .subscribe();
@@ -68,25 +82,37 @@ export default function MessagesPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id]);
+  }, [id, partnerName]);
 
+  /**
+   * Auto-scroll to bottom when messages change
+   */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  /**
+   * Send a message
+   */
   async function sendMessage() {
     const trimmed = input.trim();
     if (!trimmed || !user || !id) return;
 
+    const userId = user.id;
+
     setInput("");
+
     await supabase.from("messages").insert({
       conversation_id: id,
-      sender: user.id,
+      sender: userId,
       receiver: receiverId,
       content: trimmed,
     });
   }
 
+  /**
+   * Enter to send
+   */
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -97,6 +123,7 @@ export default function MessagesPage() {
   return (
     <>
       <div className="flex h-screen flex-col bg-background text-foreground">
+        {/* Header */}
         <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeftIcon size={20} />
@@ -104,12 +131,14 @@ export default function MessagesPage() {
           <span className="font-semibold">{partnerName}</span>
         </div>
 
+        {/* Messages */}
         <div className="flex-1 space-y-3 overflow-y-auto p-4 pb-36">
           {messages.length === 0 && (
             <p className="mt-8 text-center text-sm text-muted-foreground">
               No messages yet. Say hello!
             </p>
           )}
+
           {messages.map((msg) => {
             const isMe = msg.sender === user?.id;
             return (
@@ -129,9 +158,11 @@ export default function MessagesPage() {
               </div>
             );
           })}
+
           <div ref={bottomRef} />
         </div>
 
+        {/* Input */}
         <div className="fixed inset-x-0 bottom-16 border-t border-border bg-background px-4 py-3">
           <div className="mx-auto flex max-w-2xl items-end gap-2">
             <textarea
@@ -142,6 +173,7 @@ export default function MessagesPage() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
             />
+
             <Button
               type="button"
               onClick={sendMessage}

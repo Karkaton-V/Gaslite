@@ -1,6 +1,17 @@
 import { supabase } from "@/shared/lib/supabase/client";
 
 /* ============================================================
+   INTERNAL AUTH HELPER
+   (Prevents repeating supabase.auth.getUser everywhere)
+============================================================ */
+
+async function authUser() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error("Must be logged in");
+  return data.user;
+}
+
+/* ============================================================
    AUTH FUNCTIONS
 ============================================================ */
 
@@ -9,7 +20,6 @@ export async function loginUser(email: string, password: string) {
     email,
     password,
   });
-
   return { error };
 }
 
@@ -42,13 +52,12 @@ export async function resetPassword(email: string) {
 ============================================================ */
 
 export async function getDisplayName() {
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) throw new Error("Must be logged in");
+  const user = await authUser();
 
   const { data, error } = await supabase
     .from("profiles")
     .select("display_name")
-    .eq("id", authData.user.id)
+    .eq("id", user.id)
     .single();
 
   if (error) throw error;
@@ -56,25 +65,23 @@ export async function getDisplayName() {
 }
 
 export async function updateDisplayName(newDisplayName: string) {
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData?.user) throw new Error("Must be logged in");
+  const user = await authUser();
 
   const { error } = await supabase
     .from("profiles")
     .update({ display_name: newDisplayName })
-    .eq("id", authData.user.id);
+    .eq("id", user.id);
 
   if (error) throw error;
 }
 
 export async function getHandle() {
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData?.user) throw new Error("Must be logged in");
+  const user = await authUser();
 
   const { data, error } = await supabase
     .from("profiles")
     .select("handle")
-    .eq("id", authData.user.id)
+    .eq("id", user.id)
     .single();
 
   if (error) throw error;
@@ -82,13 +89,12 @@ export async function getHandle() {
 }
 
 export async function updateHandle(newHandle: string) {
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData?.user) throw new Error("Must be logged in");
+  const user = await authUser();
 
   const { error } = await supabase
     .from("profiles")
     .update({ handle: newHandle })
-    .eq("id", authData.user.id);
+    .eq("id", user.id);
 
   if (error) throw error;
 }
@@ -98,24 +104,21 @@ export async function updateHandle(newHandle: string) {
 ============================================================ */
 
 export async function getAvatar() {
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData?.user) throw new Error("Must be logged in");
+  const user = await authUser();
 
   const { data, error } = await supabase
     .from("profiles")
     .select("profile_pic")
-    .eq("id", authData.user.id)
+    .eq("id", user.id)
     .single();
 
   if (error) throw error;
 
   const path = data.profile_pic || "default/default.png";
 
-  const { data: avatarData } = supabase.storage
-    .from("avatars")
-    .getPublicUrl(path);
+  const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
 
-  return avatarData.publicUrl;
+  return urlData.publicUrl;
 }
 
 export async function updateAvatar() {
@@ -127,19 +130,15 @@ export async function updateAvatar() {
 ============================================================ */
 
 export async function getFollowedUsers() {
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData?.user) throw new Error("Must be logged in");
-
-  const userId = authData.user.id;
+  const user = await authUser();
 
   const { data, error } = await supabase
     .from("following")
     .select("isFollowed")
-    .eq("isFollowing", userId);
+    .eq("isFollowing", user.id);
 
   if (error) throw error;
 
-  // Return a flat array of UUIDs
   return data.map((row) => row.isFollowed);
 }
 
@@ -148,7 +147,6 @@ export async function getFollowedUsers() {
 ============================================================ */
 
 export async function getFeedForUser(userId: string) {
-  // 1. Get followed users
   const { data: follows, error: followErr } = await supabase
     .from("following")
     .select("isFollowed")
@@ -157,10 +155,8 @@ export async function getFeedForUser(userId: string) {
   if (followErr) throw followErr;
 
   const followedIds = follows?.map((f) => f.isFollowed) ?? [];
-
   if (followedIds.length === 0) return [];
 
-  // 2. Get posts from followed users
   const { data: posts, error: postErr } = await supabase
     .from("user_posts")
     .select("*, profiles(display_name, handle, profile_pic)")

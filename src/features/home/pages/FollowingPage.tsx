@@ -1,69 +1,46 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/shared/lib/supabase/client";
 
-import { getPostFromFollowed } from "../../auth/api/posts/postFunctions";
+import {
+  getFeedForUser,
+  getPostsLikedBySelf,
+} from "@/features/auth/api/posts/postFunctions";
+
 import BottomNav from "@/shared/ui/BottomNav";
 import { Post } from "@/shared/ui/post";
-import { PostDialog } from "@/shared/ui/post-dialog";
-
-import { getPostsLikedBySelf } from "@/features/auth/api/posts/postFunctions";
 
 export default function FollowingPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [likedPostsArray, setLikedPostsArray] = useState<string[]>([]);
 
   const [sortBy, setSortBy] = useState("newest");
   const [filterBy, setFilterBy] = useState("all");
 
-  // set var for like handling
-  // use an array of strings
-  // each string in array is a post UUID
-  const [likedPostsArray, setLikedPostsArray] = useState<string[]>([]);
-
-  /**
-   * Load feed:
-   * 1. Get current user
-   * 2. Get posts from followed users
-   */
   useEffect(() => {
     async function loadFeed() {
       setLoading(true);
 
-      // 1. Get current user
-      const { data: authData } = await supabase.auth.getUser();
-      if (!authData?.user) {
-        setPosts([]);
-        setLoading(false);
-        return;
-      }
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth?.user) return;
 
-      const userId = authData.user.id;
+      const userId = auth.user.id;
 
-      // 2. Get posts from followed users, and get posts liked by self
-      const followedPosts = await getPostFromFollowed(userId);
-      const likedPosts = await getPostsLikedBySelf();
+      const followedPosts = await getFeedForUser(userId);
+      const liked = await getPostsLikedBySelf();
 
-      setPosts(followedPosts || []);
-
-      // map function to go through array, item by item, and update likedPostsArray
-      // if there's a problem, default to empty array
-      setLikedPostsArray((likedPosts ?? []).map((post) => post.post_id));
-
+      setLikedPostsArray(liked.map((p) => p.user_post_id));
+      setPosts(followedPosts ?? []);
       setLoading(false);
     }
 
     loadFeed();
 
-    // arrow function to reload feed
-    const onPosted = () => void loadFeed();
-    // add event listener for post creation
+    const onPosted = () => loadFeed();
     window.addEventListener("post_created", onPosted);
     return () => window.removeEventListener("post_created", onPosted);
   }, []);
 
-  /**
-   * Apply filtering + sorting
-   */
   const filteredPosts = posts
     .filter((post) => {
       if (filterBy === "popular") return post.like_count >= 100;
@@ -81,7 +58,6 @@ export default function FollowingPage() {
   return (
     <>
       <div className="min-h-screen bg-background p-8 pb-24 text-foreground">
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-semibold">Following</h1>
           <p className="mt-2 text-muted-foreground">
@@ -89,7 +65,6 @@ export default function FollowingPage() {
           </p>
         </div>
 
-        {/* Sort + Filter */}
         <div className="mb-6 flex flex-wrap gap-4">
           <select
             value={sortBy}
@@ -110,14 +85,10 @@ export default function FollowingPage() {
             <option value="popular">Filter: Popular posts</option>
             <option value="comments">Filter: Has comments</option>
           </select>
-
-          <PostDialog />
         </div>
 
-        {/* Loading */}
         {loading && <p className="text-muted-foreground">Loading feed…</p>}
 
-        {/* Posts */}
         {!loading && filteredPosts.length === 0 && (
           <p className="text-muted-foreground">
             No posts from followed users yet.
@@ -129,13 +100,15 @@ export default function FollowingPage() {
             <Post
               key={post.id}
               postId={post.id}
+              source="user"
+              communityId={null}
               username={post.profiles.display_name}
-              timePosted={post.created_at}
               avatarPicture={post.profiles.profile_pic}
-              initialIsLiked={likedPostsArray.includes(post.id)}
+              timePosted={post.created_at}
               postContent={post.content}
               likeCount={post.like_count}
               commentCount={post.comment_count}
+              initialIsLiked={likedPostsArray.includes(post.id)}
             />
           ))}
         </div>

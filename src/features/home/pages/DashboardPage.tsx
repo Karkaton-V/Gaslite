@@ -1,74 +1,65 @@
+import { useEffect, useState } from "react";
 import { supabase } from "@/shared/lib/supabase/client";
+
+import { getCommunityFeed } from "@/features/auth/api/posts/postFunctions";
 import { Post } from "@/shared/ui/post";
-import { Button } from "@/shared/ui/button";
-import { useNavigate } from "react-router-dom";
-import { PostDialog } from "@/shared/ui/post-dialog";
 import BottomNav from "@/shared/ui/BottomNav";
 
 export default function DashboardPage() {
-  const navigate = useNavigate();
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { data } = supabase.storage
-    .from("avatars")
-    .getPublicUrl("default/default.png");
+  useEffect(() => {
+    async function loadFeed() {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth?.user) return;
 
-  const picture = data.publicUrl || "/default-avatar.png";
+      const feed = await getCommunityFeed(auth.user.id);
+      setPosts(feed);
+      setLoading(false);
+    }
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    navigate("/login");
-  }
+    loadFeed();
+
+    const onPosted = () => loadFeed();
+    window.addEventListener("post_created", onPosted);
+    return () => window.removeEventListener("post_created", onPosted);
+  }, []);
 
   return (
     <>
-      <div className="p-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold">Dashboard</h1>
-          <p className="mt-2 text-muted-foreground">
-            Welcome to your dashboard.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => navigate("/conversations")}>
-            Messages
-          </Button>
-
-          {/* Right side: logout button */}
-          <Button variant="destructive" onClick={handleLogout}>
-            Logout
-          </Button>
-        </div>
+      <div className="p-6">
+        <h1 className="text-3xl font-semibold">Dashboard</h1>
+        <p className="mt-2 text-muted-foreground">
+          Posts from communities you follow.
+        </p>
       </div>
 
-      <div className="min-h-screen bg-background p-8 pb-24 text-foreground">
-        <Post
-          username="alyx"
-          avatarPicture={picture}
-          postContent="This is a test post component"
-          likeCount={0}
-          commentCount={0}
-        />
+      <div className="min-h-screen bg-background p-6 pb-24 space-y-6">
+        {loading && <p className="text-muted-foreground">Loading feed…</p>}
 
-        <br />
+        {!loading && posts.length === 0 && (
+          <p className="text-muted-foreground">
+            You’re not following any communities yet.
+          </p>
+        )}
 
-        <Post
-          username="user123"
-          avatarPicture="/default-avatar.png"
-          postContent="Hello world!"
-          likeCount={0}
-          commentCount={0}
-        />
-
-        <br />
-
-        <Post
-          username="Karkaton"
-          avatarPicture="/default-avatar.png"
-          postContent="Another test post"
-          likeCount={0}
-          commentCount={0}
-        />
+        {posts.map((post) => (
+          <Post
+            key={post.id}
+            postId={post.id}
+            source="community"
+            communityId={post.community_id}
+            username={post.profiles.display_name}
+            avatarPicture={post.profiles.profile_pic}
+            postContent={post.content}
+            likeCount={post.like_count}
+            commentCount={post.comment_count}
+            timePosted={post.created_at}
+            communityName={post.communities.name}
+            communityPicture={post.communities.picture}
+          />
+        ))}
       </div>
 
       <BottomNav />

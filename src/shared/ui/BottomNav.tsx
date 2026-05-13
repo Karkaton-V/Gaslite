@@ -1,5 +1,5 @@
-import { House, UsersThree, UserCircle } from "@phosphor-icons/react"
-import { Link, useLocation } from "react-router-dom"
+import { House, UsersThree, UserCircle } from "@phosphor-icons/react";
+import { Link, useLocation } from "react-router-dom";
 
 const navItems = [
   {
@@ -8,7 +8,7 @@ const navItems = [
     icon: House,
   },
   {
-    path: "/recommended",
+    path: "/following", // ⭐ FIXED
     label: "Feed",
     icon: UsersThree,
   },
@@ -22,10 +22,10 @@ const navItems = [
     label: "Profile",
     icon: UserCircle,
   },
-]
+];
 
 export default function BottomNav() {
-  const location = useLocation()
+  const location = useLocation();
 
   return (
     <nav
@@ -34,8 +34,8 @@ export default function BottomNav() {
     >
       <div className="mx-auto flex max-w-3xl items-center justify-around px-2 py-2">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path
-          const Icon = item.icon
+          const isActive = location.pathname === item.path;
+          const Icon = item.icon;
 
           return (
             <Link
@@ -50,9 +50,9 @@ export default function BottomNav() {
               <Icon size={22} weight={isActive ? "fill" : "regular"} />
               <span>{item.label}</span>
             </Link>
-          )
+          );
         })}
       </div>
     </nav>
-  )
+  );
 }

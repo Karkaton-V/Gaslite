@@ -1,40 +1,47 @@
 import { supabase } from "@/shared/lib/supabase/client";
 
 /* ============================================================
-   TYPES
+   INTERNAL AUTH HELPER
 ============================================================ */
 
-export type CreatePostInfo = {
-  content: string;
-  image?: string | null;
-};
-
-export type LikePostInfo = {
-  postId: string;
-  userId: string;
-};
+async function authUser() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error("Must be logged in");
+  return data.user;
+}
 
 /* ============================================================
-   CREATE POST
+   USER POSTS (FollowingPage)
 ============================================================ */
+export async function getUserPost(postId: string) {
+  const { data, error } = await supabase
+    .from("user_posts")
+    .select(
+      `
+      *,
+      profiles:profiles!user_posts_user_id_fkey(display_name, profile_pic)
+    `,
+    )
+    .eq("id", postId)
+    .single();
 
-export async function createPost(input: CreatePostInfo) {
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) throw new Error("Must be logged in");
+  if (error) throw error;
+  return data;
+}
+export async function createUserPost(content: string, image?: string | null) {
+  const user = await authUser();
 
-  const postContent = input.content.trim();
-  if (!postContent) throw new Error("Post content cannot be empty");
-  if (postContent.length > 250)
+  const trimmed = content.trim();
+  if (!trimmed) throw new Error("Post content cannot be empty");
+  if (trimmed.length > 250)
     throw new Error("Posts are limited to 250 characters");
-
-  const userId = authData.user.id;
 
   const { data, error } = await supabase
     .from("user_posts")
     .insert({
-      user_id: userId,
-      content: postContent,
-      image: input.image ?? null,
+      user_id: user.id,
+      content: trimmed,
+      image: image ?? null,
     })
     .select()
     .single();
@@ -43,39 +50,61 @@ export async function createPost(input: CreatePostInfo) {
   return data;
 }
 
-/* ============================================================
-   DELETE POST
-============================================================ */
+export async function getFeedForUser(userId: string) {
+  // 1. Get users the current user follows
+  const { data: follows, error: followErr } = await supabase
+    .from("following")
+    .select(`"isFollowed"`)
+    .eq(`"isFollowing"`, userId);
 
-export async function deletePost(postId: string) {
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData?.user) throw new Error("Must be logged in");
+  if (followErr) throw followErr;
 
-  const userId = authData.user.id;
+  const followedIds = follows?.map((f) => f.isFollowed) ?? [];
+  if (followedIds.length === 0) return [];
 
-  // Only delete posts owned by the user
-  const { error } = await supabase
+  // 2. Fetch posts from those users
+  const { data: posts, error: postErr } = await supabase
     .from("user_posts")
-    .delete()
-    .eq("id", postId)
-    .eq("user_id", userId);
+    .select(
+      `
+      *,
+      profiles:profiles!user_posts_user_id_fkey(display_name, profile_pic)
+    `,
+    )
+    .in("user_id", followedIds)
+    .order("created_at", { ascending: false });
+
+  if (postErr) throw postErr;
+
+  return posts;
+}
+
+export async function getPostsLikedBySelf() {
+  const user = await authUser();
+
+  const { data, error } = await supabase
+    .from("post_likes")
+    .select("user_post_id")
+    .eq("liked_by", user.id);
 
   if (error) throw error;
-  return true;
+
+  return data as { user_post_id: string }[];
 }
 
 /* ============================================================
-   GRAB POST GIVEN UUID
+   COMMUNITY POSTS (DashboardPage)
 ============================================================ */
-export async function getPost(postId: string) {
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData?.user) throw new Error("Must be logged in");
-
-  const userId = authData.user.id;
-
+export async function getCommunityPost(postId: string) {
   const { data, error } = await supabase
-    .from("user_posts")
-    .select("*, profiles(display_name, handle, profile_pic)")
+    .from("community_posts")
+    .select(
+      `
+      *,
+      profiles:profiles!community_posts_user_id_fkey(display_name, profile_pic),
+      communities:communities!community_posts_community_id_fkey(name, picture)
+    `,
+    )
     .eq("id", postId)
     .single();
 
@@ -83,145 +112,122 @@ export async function getPost(postId: string) {
   return data;
 }
 
-/* ============================================================
-   LIKE POST
-============================================================ */
+export async function createCommunityPost(
+  communityId: string,
+  content: string,
+  image?: string | null,
+) {
+  const user = await authUser();
 
-export async function likePost(postId: string) {
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData?.user) throw new Error("Must be logged in");
+  const trimmed = content.trim();
+  if (!trimmed) throw new Error("Post content cannot be empty");
+  if (trimmed.length > 250)
+    throw new Error("Posts are limited to 250 characters");
 
-  const userId = authData.user.id;
-
-  // Insert into likes table (you must have a likes table)
-  const { error } = await supabase.from("post_likes").insert({
-    post_id: postId,
-    liked_by: userId,
-  });
-
-  if (error) throw error;
-
-  // Increment like_count
-  await supabase.rpc("increment_post_likes", { postid: postId });
-
-  return true;
-}
-
-/* ============================================================
-   UNLIKE POST
-============================================================ */
-
-export async function unlikePost(postId: string) {
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData?.user) throw new Error("Must be logged in");
-
-  const userId = authData.user.id;
-
-  // Remove like row
-  const { error } = await supabase
-    .from("post_likes")
-    .delete()
-    .eq("post_id", postId)
-    .eq("liked_by", userId);
-
-  if (error) throw error;
-
-  // Decrement like_count
-  await supabase.rpc("decrement_post_likes", { postid: postId });
-
-  return true;
-}
-
-/* ============================================================
-   GET LIKES ON A POST
-============================================================ */
-export async function getLikeCount(postId: string) {
-  // no auth required!
-
-  const { count, error } = await supabase
-    .from("post_likes")
-    .select("*", { count: "exact", head: true })
-    .eq("post_id", postId);
-
-  if (error) throw error;
-
-  // potential for count to be null; in that case, return 0
-  return count ?? 0;
-}
-
-/* ============================================================
-   GET POSTS LIKED BY USER
-============================================================ */
-// can be used in profile page
-export async function getPostsLikedByUser(userId: string) {
   const { data, error } = await supabase
-    .from("post_likes")
-    .select("post_id")
-    .eq("liked_by", userId);
+    .from("community_posts")
+    .insert({
+      community_id: communityId,
+      user_id: user.id,
+      content: trimmed,
+      image: image ?? null,
+    })
+    .select()
+    .single();
 
-  if (error) throw error;
-  // in this case, "data" is an array of post IDs
+  // Handle duplicate content inside the same community
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error(
+        "Someone beat you to it — this post already exists in the community.\nDrop something original instead.",
+      );
+    }
+    throw error;
+  }
+
   return data;
 }
 
-/* ============================================================
-   GET POSTS LIKED BY SELF
-============================================================ */
-export async function getPostsLikedBySelf() {
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData?.user) throw new Error("Must be logged in");
-
-  const userId = authData.user.id;
-
-  const { data, error } = await supabase
-    .from("post_likes")
-    .select("post_id")
-    .eq("liked_by", userId);
-
-  if (error) throw error;
-  return data;
-}
-
-/* ============================================================
-   GET POSTS FROM A SPECIFIC USER
-============================================================ */
-
-export async function getPostFromUser(userId: string) {
-  const { data, error } = await supabase
-    .from("user_posts")
-    .select("*, profiles(display_name, handle, profile_pic)")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data;
-}
-
-/* ============================================================
-   GET POSTS FROM FOLLOWED USERS
-============================================================ */
-
-export async function getPostFromFollowed(selfUserId: string) {
-  // 1. Get list of followed users
+export async function getCommunityFeed(userId: string) {
   const { data: follows, error: followErr } = await supabase
-    .from("following")
-    .select("isFollowed")
-    .eq("isFollowing", selfUserId);
+    .from("community_followers")
+    .select("community_id")
+    .eq("user_id", userId);
 
   if (followErr) throw followErr;
 
-  const followedIds = follows?.map((f) => f.isFollowed) ?? [];
+  const communityIds = follows?.map((f) => f.community_id) ?? [];
+  if (communityIds.length === 0) return [];
 
-  if (followedIds.length === 0) return [];
-
-  // 2. Get posts from those users
   const { data: posts, error: postErr } = await supabase
-    .from("user_posts")
-    .select("*, profiles(display_name, handle, profile_pic)")
-    .in("user_id", followedIds)
+    .from("community_posts")
+    .select(
+      `
+      *,
+      profiles:profiles!community_posts_user_id_fkey(display_name, profile_pic),
+      communities:communities!community_posts_community_id_fkey(name, picture)
+    `,
+    )
+    .in("community_id", communityIds)
     .order("created_at", { ascending: false });
 
   if (postErr) throw postErr;
 
   return posts;
+}
+
+/* ============================================================
+   UNIFIED LIKE SYSTEM (post_likes)
+============================================================ */
+
+export async function toggleLike(postId: string, source: "user" | "community") {
+  const user = await authUser();
+
+  const column = source === "user" ? "user_post_id" : "community_post_id";
+
+  const { data: existing } = await supabase
+    .from("post_likes")
+    .select("id")
+    .eq("liked_by", user.id)
+    .eq(column, postId)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase.from("post_likes").delete().eq("id", existing.id);
+    return false;
+  }
+
+  await supabase.from("post_likes").insert({
+    liked_by: user.id,
+    [column]: postId,
+  });
+
+  return true;
+}
+
+export async function hasLiked(postId: string, source: "user" | "community") {
+  const user = await authUser();
+  const column = source === "user" ? "user_post_id" : "community_post_id";
+
+  const { count } = await supabase
+    .from("post_likes")
+    .select("*", { count: "exact", head: true })
+    .eq(column, postId)
+    .eq("liked_by", user.id);
+
+  return (count ?? 0) > 0;
+}
+
+export async function getLikeCount(
+  postId: string,
+  source: "user" | "community",
+) {
+  const column = source === "user" ? "user_post_id" : "community_post_id";
+
+  const { count } = await supabase
+    .from("post_likes")
+    .select("*", { count: "exact", head: true })
+    .eq(column, postId);
+
+  return count ?? 0;
 }

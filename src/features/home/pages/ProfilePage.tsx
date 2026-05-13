@@ -6,24 +6,24 @@ import {
   getHandle,
   getAvatar,
 } from "@/features/auth/api/user/userFunctions";
-import { Separator } from "@/shared/ui/separator";
-import { Avatar, AvatarImage } from "@/shared/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar";
 import { useNavigate } from "react-router-dom";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
 
-  async function handleSettingsPage() {
+  const [displayName, setDisplayName] = useState("");
+  const [handle, setHandle] = useState("");
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  function handleSettingsPage() {
     navigate("/usersettings");
   }
 
-  // user info vars
-  const [displayName, setDisplayname] = useState("");
-  const [handle, setHandle] = useState("");
-  const [avatar, setAvatar] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  // set up useEffect to call async functions
+  /**
+   * Load profile data on mount
+   */
   useEffect(() => {
     async function loadProfileData() {
       try {
@@ -32,20 +32,21 @@ export default function ProfilePage() {
           getHandle(),
           getAvatar(),
         ]);
-        setDisplayname(disp ?? "");
+
+        setDisplayName(disp ?? "");
         setHandle(hand ?? "");
-        setAvatar(avat ?? "");
+        setAvatar(avat ?? null);
       } catch (err: any) {
         setError(err.message ?? "Profile load failed");
       }
     }
-    // call loadProfileData()
+
     loadProfileData();
   }, []);
 
   return (
     <>
-      {/* header */}
+      {/* Header */}
       <div className="p-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-semibold">Profile</h1>
@@ -54,19 +55,20 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* settings button */}
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleSettingsPage}>
-            Settings
-          </Button>
-        </div>
+        <Button variant="outline" onClick={handleSettingsPage}>
+          Settings
+        </Button>
       </div>
 
-      {/* user info section */}
-      <div className="min-h-screen bg-background p-8 pb-24 text-foreground items-center">
+      {/* Profile Info */}
+      <div className="min-h-screen bg-background p-8 pb-24 text-foreground space-y-4">
         <Avatar size="lgr" className="ml-5">
-          <AvatarImage src={avatar} />
+          <AvatarImage src={avatar ?? undefined} />
+          <AvatarFallback>
+            {displayName ? displayName[0].toUpperCase() : "?"}
+          </AvatarFallback>
         </Avatar>
+
         <h1 className="text-2xl">Display name: {displayName}</h1>
         <h1 className="text-2xl">Handle: {handle}</h1>
 

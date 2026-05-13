@@ -1,94 +1,64 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { supabase } from "@/shared/lib/supabase/client";
-import {
-  getPost,
-  getPostsLikedBySelf,
-} from "@/features/auth/api/posts/postFunctions";
-import { Post } from "@/shared/ui/post";
-import BottomNav from "@/shared/ui/BottomNav";
 
-// define post type
-type PostType = {
-  content: string;
-  like_count: number;
-  comment_count: number;
-  profiles: {
-    display_name: string;
-    handle: string;
-    profile_pic: string | null;
-  };
-};
+import {
+  getCommunityPost,
+  getUserPost,
+} from "@/features/auth/api/posts/postFunctions";
+
+import { Post } from "@/shared/ui/post";
 
 export default function SinglePostPage() {
   const { id } = useParams();
-  const [post, setPost] = useState<PostType | null>(null);
-
-  const [likedPostsArray, setLikedPostsArray] = useState<string[]>([]);
-
+  const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void loadPosts();
+    async function load() {
+      if (!id) return;
+
+      // Try community post first
+      try {
+        const communityPost = await getCommunityPost(id);
+        if (communityPost) {
+          setPost({ ...communityPost, source: "community" });
+          setLoading(false);
+          return;
+        }
+      } catch {}
+
+      // Fallback: user post
+      try {
+        const userPost = await getUserPost(id);
+        if (userPost) {
+          setPost({ ...userPost, source: "user" });
+        }
+      } catch {}
+
+      setLoading(false);
+    }
+
+    load();
   }, [id]);
 
-  async function loadPosts() {
-    if (!id) {
-      setPost(null);
-      setLoading(false);
-      setError("Missing post ID");
-      return;
-    }
+  if (loading) return <p className="p-6">Loading post…</p>;
+  if (!post) return <p className="p-6">Post not found.</p>;
 
-    setLoading(true);
-    setError(null);
-
-    // grab liked posts
-    const likedPosts = await getPostsLikedBySelf();
-    setLikedPostsArray((likedPosts ?? []).map((post) => post.post_id));
-
-    // grab post info
-
-    try {
-      const data = await getPost(id);
-      setPost(data as PostType);
-    } catch {
-      setPost(null);
-      setError("Could not load post");
-    } finally {
-      setLoading(false);
-    }
-  }
   return (
-    <>
-      {/* header can be removed later if needed */}
-      <div className="p-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold">Single Post View</h1>
-          <p className="mt-2 text-muted-foreground">Work In Progress</p>
-          <p className="mt-3 text-foreground">Post UUID: {id}</p>
-        </div>
-      </div>
-
-      <div className="min-h-screen bg-background p-8 pb-24 text-foreground">
-        {loading && <p className="text-muted-foreground">Loading Post...</p>}
-
-        {!loading && error && <p className="text-muted-foreground">{error}</p>}
-
-        {!loading && post && id && (
-          <Post
-            postId={id}
-            username={post.profiles.display_name}
-            avatarPicture={post.profiles.profile_pic}
-            initialIsLiked={likedPostsArray.includes(id)}
-            postContent={post.content}
-            likeCount={post.like_count}
-            commentCount={post.comment_count}
-          />
-        )}
-      </div>
-      <BottomNav />
-    </>
+    <div className="min-h-screen bg-background p-6">
+      <Post
+        postId={post.id}
+        source={post.source}
+        communityId={post.community_id ?? null}
+        username={post.profiles.display_name}
+        avatarPicture={post.profiles.profile_pic}
+        postContent={post.content}
+        likeCount={post.like_count}
+        commentCount={post.comment_count}
+        timePosted={post.created_at}
+        communityName={post.communities?.name}
+        communityPicture={post.communities?.picture}
+      />
+    </div>
   );
 }
