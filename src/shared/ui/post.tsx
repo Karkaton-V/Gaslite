@@ -8,12 +8,14 @@ import { Toggle } from "@/shared/ui/toggle";
 import { Separator } from "@/shared/ui/separator";
 import { cn } from "@/shared/lib/utils";
 import { HeartIcon } from "@phosphor-icons/react";
+import { formatTimestamp, isPostPositive } from "@/features/auth/api/posts/postFunctions";
 
 import {
   toggleLike,
   getLikeCount,
   hasLiked,
 } from "@/features/auth/api/posts/postFunctions";
+import { supabase } from "../lib/supabase/client";
 
 type PostProps = {
   postId: string;
@@ -55,7 +57,7 @@ export function Post({
 }: PostProps & React.ComponentProps<"div">) {
   const navigate = useNavigate();
 
-  const [isLiked, setIsLiked] = useState(initialIsLiked);
+  const [userLike, setUserLike] = useState<1 | -1 | null>(null);
   const [displayCount, setDisplayCount] = useState<number>(likeCount);
 
   /* ============================================================
@@ -65,10 +67,10 @@ export function Post({
     async function load() {
       try {
         const count = await getLikeCount(postId, source);
-        const liked = await hasLiked(postId, source);
+        const Like = await hasLiked(postId, source);
 
         setDisplayCount(count);
-        setIsLiked(liked);
+        setUserLike(Like);
       } catch {
         setDisplayCount(likeCount);
       }
@@ -80,14 +82,22 @@ export function Post({
   /* ============================================================
      LIKE TOGGLE
   ============================================================= */
-  async function handleToggleLike(pressed: boolean) {
+  async function handleToggleLike(likeType: 1 | -1) {
+    const previousLike = userLike;
     try {
-      const nowLiked = await toggleLike(postId, source);
+      const newLike = await toggleLike(postId, source, likeType);
 
-      setIsLiked(nowLiked);
-      setDisplayCount((prev) => (nowLiked ? prev + 1 : prev - 1));
+      setUserLike(newLike);
+      setDisplayCount((prev) => {
+        // If toggling off, reverse the previous like
+        if (newLike === null) return prev - previousLike!;
+        // If switching likes, apply double the change (e.g. -1 to 1 = +2)
+        if (previousLike !== null) return prev + likeType * 2;
+        // New like
+        return prev + likeType;
+      });
     } catch {
-      setIsLiked(!pressed);
+      setUserLike(previousLike);
     }
   }
 
@@ -137,23 +147,27 @@ export function Post({
         )}
 
         <CardTitle>
-          <div className="flex items-center gap-5 px-5 pt-4">
-            <Avatar
-              size="lgr"
-              className="cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/profile`);
-              }}
-            >
-              <AvatarImage
-                src={safeAvatarSrc}
-                onError={(e) => (e.currentTarget.src = "/default-avatar.png")}
-              />
-              <AvatarFallback>{username[0]?.toUpperCase()}</AvatarFallback>
-            </Avatar>
+          <div className="flex items-center justify-between gap-5 px-5 pt-4">
+            <div className="flex items-center gap-5">
+              <Avatar
+                size="lgr"
+                className="cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/profile`);
+                }}
+              >
+                <AvatarImage
+                  src={safeAvatarSrc}
+                  onError={(e) => (e.currentTarget.src = "/default-avatar.png")}
+                />
+                <AvatarFallback>{username[0]?.toUpperCase()}</AvatarFallback>
+              </Avatar>
 
-            <span className="text-xl">{username}</span>
+              <span className="text-xl">{username}</span>
+            </div>
+
+            <span className="text-sm text-muted-foreground">{formatTimestamp(timePosted)}</span>
           </div>
 
           <Separator className="mt-4" />
@@ -165,22 +179,37 @@ export function Post({
 
         <CardFooter>
           <div className="flex items-center gap-5 px-5 pb-4">
-            {/* LIKE BUTTON */}
+            {/* LIKE BUTTONS */}
             <div
               onClick={(e) => {
                 e.stopPropagation();
               }}
+              className="flex items-center gap-1"
             >
               <Toggle
                 variant="outline"
-                pressed={isLiked}
-                onPressedChange={handleToggleLike}
+                pressed={userLike === 1}
+                onPressedChange={() => handleToggleLike(1)}
               >
-                <HeartIcon
-                  weight={isLiked ? "fill" : "regular"}
-                  className={isLiked ? "text-red-500" : undefined}
+                <img
+                  src={supabase.storage.from("assets").getPublicUrl("voting/upvote.png").data.publicUrl}
+                  alt="Upvote"
+                  className={`w-4 h-4 ${userLike === 1 ? "opacity-100" : "opacity-50"}`}
                 />
-                {displayCount}
+              </Toggle>
+
+              <span>{displayCount}</span>
+
+              <Toggle
+                variant="outline"
+                pressed={userLike === -1}
+                onPressedChange={() => handleToggleLike(-1)}
+              >
+                <img
+                  src={supabase.storage.from("assets").getPublicUrl("voting/downvote.png").data.publicUrl}
+                  alt="Downvote"
+                  className={`w-4 h-4 ${userLike === -1 ? "opacity-100" : "opacity-50"}`}
+                />
               </Toggle>
             </div>
 

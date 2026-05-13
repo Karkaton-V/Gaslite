@@ -180,54 +180,87 @@ export async function getCommunityFeed(userId: string) {
    UNIFIED LIKE SYSTEM (post_likes)
 ============================================================ */
 
-export async function toggleLike(postId: string, source: "user" | "community") {
+export async function toggleLike(postId: string, source: "user" | "community", likeType: 1 | -1) {
   const user = await authUser();
-
   const column = source === "user" ? "user_post_id" : "community_post_id";
 
   const { data: existing } = await supabase
     .from("post_likes")
-    .select("id")
+    .select("id, vote_type")
     .eq("liked_by", user.id)
     .eq(column, postId)
     .maybeSingle();
 
-  if (existing) {
+  // If the same vote type exists, remove it (toggle off)
+  if (existing && existing.vote_type === likeType) {
     await supabase.from("post_likes").delete().eq("id", existing.id);
-    return false;
+    return null;
   }
 
+  // If the opposite vote exists, update it
+  if (existing && existing.vote_type !== likeType) {
+    await supabase
+      .from("post_likes")
+      .update({ vote_type: likeType })
+      .eq("id", existing.id);
+    return likeType;
+  }
+
+  // No vote exists, insert a new one
   await supabase.from("post_likes").insert({
     liked_by: user.id,
     [column]: postId,
+    vote_type: likeType,
   });
 
-  return true;
+  return likeType;
 }
 
-export async function hasLiked(postId: string, source: "user" | "community") {
+export async function hasLiked(postId: string, source: "user" | "community"): Promise<1 | -1 | null> {
   const user = await authUser();
   const column = source === "user" ? "user_post_id" : "community_post_id";
 
-  const { count } = await supabase
+  const { data } = await supabase
     .from("post_likes")
-    .select("*", { count: "exact", head: true })
+    .select("vote_type")
     .eq(column, postId)
-    .eq("liked_by", user.id);
+    .eq("liked_by", user.id)
+    .maybeSingle();
 
-  return (count ?? 0) > 0;
+  return (data?.vote_type as 1 | -1) ?? null;
 }
 
-export async function getLikeCount(
+export async function isPostPositive(
   postId: string,
-  source: "user" | "community",
-) {
+  source: "user" | "community"
+): Promise<boolean> {
+  const count = await getLikeCount(postId, source);
+  return count > 0;
+}
+
+export async function getLikeCount(postId: string, source: "user" | "community") {
   const column = source === "user" ? "user_post_id" : "community_post_id";
 
-  const { count } = await supabase
+  const { data } = await supabase
     .from("post_likes")
-    .select("*", { count: "exact", head: true })
+    .select("vote_type")
     .eq(column, postId);
 
-  return count ?? 0;
+  if (!data) return 0;
+
+  return data.reduce((acc, row) => acc + (row.vote_type as 1 | -1), 0);
+}
+
+export function formatTimestamp(timestamp: string): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (seconds < 60) return "just now";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  if (seconds < 2592000) return `${Math.floor(seconds / 86400)}d ago`;
+  if (seconds < 31536000) return `${Math.floor(seconds / 2592000)}mo ago`;
+
+  return `${Math.floor(seconds / 31536000)}y ago`;
 }
