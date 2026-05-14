@@ -35,7 +35,7 @@ export default function UserPostsPage() {
 
       // 3. Get posts liked by self
       const likedPosts = await getPostsLikedBySelf();
-      setLikedPostsArray((likedPosts ?? []).map((p) => p.post_id));
+      setLikedPostsArray((likedPosts ?? []).map((p) => p.user_post_id));
 
       setPosts(followedPosts || []);
       setLoading(false);

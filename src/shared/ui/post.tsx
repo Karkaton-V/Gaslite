@@ -1,13 +1,33 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Card, CardTitle, CardContent, CardFooter } from "@/shared/ui/card";
+import {
+  Card,
+  CardTitle,
+  CardContent,
+  CardFooter,
+  CardAction,
+  CardHeader,
+} from "@/shared/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
 import { Toggle } from "@/shared/ui/toggle";
 import { Separator } from "@/shared/ui/separator";
 import { cn } from "@/shared/lib/utils";
-import { HeartIcon } from "@phosphor-icons/react";
+import {
+  HeartIcon,
+  DotsThreeVerticalIcon,
+  DotsThree,
+} from "@phosphor-icons/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/shared/ui/dropdown-menu";
 
 import {
   toggleLike,
@@ -115,7 +135,6 @@ export function Post({
     <div className="w-full max-w-2xl mx-auto">
       <Card
         className={cn("bg-card text-foreground cursor-pointer", className)}
-        onClick={handleCardClick}
         {...props}
       >
         {/* COMMUNITY BADGE */}
@@ -135,31 +154,48 @@ export function Post({
             <span className="text-sm font-medium">{communityName}</span>
           </div>
         )}
+        <CardHeader>
+          <CardTitle>
+            <div className="flex items-center gap-5 px-5 pt-4">
+              <Avatar
+                size="lgr"
+                className="cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/profile`);
+                }}
+              >
+                <AvatarImage
+                  src={safeAvatarSrc}
+                  onError={(e) => (e.currentTarget.src = "/default-avatar.png")}
+                />
+                <AvatarFallback>{username[0]?.toUpperCase()}</AvatarFallback>
+              </Avatar>
 
-        <CardTitle>
-          <div className="flex items-center gap-5 px-5 pt-4">
-            <Avatar
-              size="lgr"
-              className="cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/profile`);
-              }}
-            >
-              <AvatarImage
-                src={safeAvatarSrc}
-                onError={(e) => (e.currentTarget.src = "/default-avatar.png")}
-              />
-              <AvatarFallback>{username[0]?.toUpperCase()}</AvatarFallback>
-            </Avatar>
+              <span className="text-xl">{username}</span>
+            </div>
+          </CardTitle>
+          <CardAction>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost">
+                  {" "}
+                  <DotsThreeVerticalIcon className="text-muted-foreground size-6" />
+                </Button>
+              </DropdownMenuTrigger>
 
-            <span className="text-xl">{username}</span>
-          </div>
-
-          <Separator className="mt-4" />
-        </CardTitle>
-
-        <CardContent>
+              <DropdownMenuContent>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem>Edit Post</DropdownMenuItem>
+                  <DropdownMenuItem variant="destructive">
+                    Delete Post
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </CardAction>
+        </CardHeader>
+        <CardContent onClick={handleCardClick}>
           <p className="text-lg px-5 py-3">{postContent}</p>
         </CardContent>
 
