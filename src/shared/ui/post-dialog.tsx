@@ -10,9 +10,12 @@ import {
 } from "@/shared/ui/dialog";
 import { Textarea } from "@/shared/ui/textarea";
 
-import { createCommunityPost } from "@/features/auth/api/posts/postFunctions";
+import {
+  createCommunityPost,
+  createUserPost,
+} from "@/features/auth/api/posts/postFunctions";
 
-export function PostDialog({ communityId }: { communityId: string }) {
+export function PostDialog({ communityId }: { communityId?: string }) {
   const [postText, setPostText] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
@@ -25,8 +28,11 @@ export function PostDialog({ communityId }: { communityId: string }) {
     try {
       setIsPosting(true);
 
-      await createCommunityPost(communityId, postText);
-
+      if (communityId) {
+        await createCommunityPost(communityId, postText);
+      } else {
+        await createUserPost(postText);
+      }
       // Notify feed pages
       window.dispatchEvent(new CustomEvent("post_created"));
 

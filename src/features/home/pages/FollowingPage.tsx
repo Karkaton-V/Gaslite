@@ -8,6 +8,7 @@ import {
 
 import BottomNav from "@/shared/ui/BottomNav";
 import { Post } from "@/shared/ui/post";
+import { PostDialog } from "@/shared/ui/post-dialog";
 
 export default function FollowingPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -85,6 +86,8 @@ export default function FollowingPage() {
             <option value="popular">Filter: Popular posts</option>
             <option value="comments">Filter: Has comments</option>
           </select>
+
+          <PostDialog />
         </div>
 
         {loading && <p className="text-muted-foreground">Loading feed…</p>}
